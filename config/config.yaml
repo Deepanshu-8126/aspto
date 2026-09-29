@@ -1,0 +1,109 @@
+# ────────────────────────────────────────────────
+# AIInfluencerOS — Master Configuration
+# ────────────────────────────────────────────────
+
+# ── Gemini API (free tier) ──
+gemini:
+  api_key: "CHANGE_ME"            # Get from https://aistudio.google.com/app/apikey
+  model: "gemini-2.0-flash"
+  temperature: 0.8
+  max_tokens: 1024
+
+# ── Instagram (instagrapi) ──
+instagram:
+  username: "CHANGE_ME"
+  password: "CHANGE_ME"
+  max_posts_per_day: 5
+  human_delay_min: 60             # seconds between actions
+  human_delay_max: 300
+
+# ── Telegram Bot ──
+telegram:
+  bot_token: "CHANGE_ME"          # Get from @BotFather
+  admin_chat_id: "CHANGE_ME"      # Your Telegram user ID
+
+# ── WhatsApp (OpenWA) ──
+whatsapp:
+  api_url: "http://localhost:8080" # OpenWA server URL
+  session_id: "default"
+  max_dms_per_day: 50
+  reply_delay_min: 3              # seconds
+  reply_delay_max: 10
+
+# ── Cloud GPU (Colab/Kaggle Gradio API) ──
+cloud:
+  gradio_url: "CHANGE_ME"         # ngrok/Colab URL e.g. https://xxxx.ngrok-free.app
+  timeout: 900                    # 15 min per generation
+  retry_attempts: 3
+  retry_delay: 30                 # seconds
+
+# ── Google Drive (output storage) ──
+gdrive:
+  output_folder: "/content/drive/MyDrive/ai_influencer/output"
+
+# ── Paths ──
+paths:
+  database: "data/influencer.db"
+  output_dir: "output"
+  models_dir: "models"
+  lora_path: "models/lora/my_face.safetensors"
+  voice_ref: "models/voice/reference.wav"
+
+# ── Video Settings ──
+video:
+  width: 1080
+  height: 1920
+  fps: 30
+  codec: "libx264"
+  format: "mp4"
+  duration: 30                    # target reel duration in seconds
+  aspect_ratio: "9:16"
+
+# ── Scheduler ──
+scheduler:
+  timezone: "Asia/Kolkata"
+  post_times:                     # Daily auto-post times (24hr)
+    - "09:00"
+    - "13:00"
+    - "17:00"
+    - "20:00"
+    - "22:00"
+  topics_rotation:                # Auto-topic rotation
+    - "skincare routine"
+    - "morning motivation"
+    - "fitness tips"
+    - "fashion haul"
+    - "productivity hacks"
+    - "self-care Sunday"
+    - "healthy recipes"
+    - "study with me"
+    - "get ready with me"
+    - "room makeover"
+
+# ── Generation Pipeline ──
+pipeline:
+  image_engine: "fooocus"         # "fooocus" (recommended 10s SDXL) or "comfyui"
+  fooocus_url: "http://127.0.0.1:8888"
+  fooocus_base_model: "juggernautXL_v8Rundiffusion.safetensors"
+  fooocus_styles:
+    - "Fooocus V2"
+    - "Fooocus Masterpiece"
+    - "Fooocus Enhance"
+  fooocus_aspect_ratio: "704*1408" # 9:16 vertical video ratio for reels
+  fooocus_performance: "Quality"   # "Speed", "Quality", "Extreme Speed"
+  comfyui_url: "http://127.0.0.1:8188"
+  sd_model: "v1-5-pruned.safetensors"
+  lora_strength: 0.90
+  wan_model: "Wan2.1-T2V-1.3B"
+  musetalk_model: "musetalk_v1.5"
+  f5tts_model: "F5-TTS"
+  video_clip_duration: 5          # seconds per Wan2.1 clip
+  num_clips: 6                    # 6 x 5sec = 30sec reel
+
+# ── Rate Limits ──
+rate_limits:
+  instagram_posts_per_day: 5
+  instagram_stories_per_day: 10
+  instagram_comments_per_hour: 20
+  whatsapp_dms_per_day: 50
+  generation_per_day: 10

@@ -1,0 +1,31 @@
+{
+  "brands": [
+    {
+      "id": 1,
+      "name": "GlowUp Skincare",
+      "product": "Vitamin C Serum",
+      "price": "₹499",
+      "link": "https://example.com/glowup-serum",
+      "pitch": "This serum literally changed my skin in 2 weeks. The glow is REAL.",
+      "active": true
+    },
+    {
+      "id": 2,
+      "name": "FitLife",
+      "product": "Protein Shake Mix",
+      "price": "₹899",
+      "link": "https://example.com/fitlife-shake",
+      "pitch": "My morning routine is incomplete without this shake. Tastes like dessert but healthy!",
+      "active": true
+    },
+    {
+      "id": 3,
+      "name": "StyleVerse",
+      "product": "Oversized Tee Collection",
+      "price": "₹399",
+      "link": "https://example.com/styleverse-tees",
+      "pitch": "The softest tees ever. I literally wear these every single day.",
+      "active": true
+    }
+  ]
+}

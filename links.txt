@@ -1,0 +1,13 @@
+# ═════════════════════════════════════════════════════════════════
+# AI-INFLUENCER-OS — Daily Target Instagram Reels
+# Format: <instagram_url> [--dress "outfit description"] [--bg "background"]
+# GitHub Actions roz subah 10 AM aur shaam 6 PM inme se reel uthayega
+# ═════════════════════════════════════════════════════════════════
+
+https://www.instagram.com/reel/example1/ --dress "red satin evening gown" --bg "luxury penthouse balcony at sunset"
+https://www.instagram.com/reel/example2/ --dress "chic casual streetwear, oversized hoodie and cargo pants" --bg "cyberpunk neon street"
+https://www.instagram.com/reel/example3/ --dress "traditional indian saree with gold embroidery" --bg "royal palace courtyard"
+https://www.instagram.com/reel/example4/ --dress "summer floral sundress" --bg "tropical beach with palm trees"
+https://www.instagram.com/reel/example5/ --dress "stylish gym activewear, crop top and leggings" --bg "modern aesthetic fitness studio"
+https://www.instagram.com/reel/example6/ --dress "black leather jacket and jeans" --bg "rooftop overlooking tokyo skyline"
+https://www.instagram.com/reel/example7/ --dress "boho festival outfit with sunglasses" --bg "coachella sunset vibes"

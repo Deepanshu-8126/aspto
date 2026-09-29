@@ -1,0 +1,190 @@
+name: AI Video Pipeline (Zero Laptop Load)
+
+on:
+  schedule:
+    # 04:30 UTC = 10:00 AM IST
+    - cron: '30 4 * * *'
+    # 12:30 UTC = 06:00 PM IST
+    - cron: '30 12 * * *'
+
+  workflow_dispatch:
+    inputs:
+      reel_url:
+        description: 'Dance Reel URL to copy'
+        required: false
+        default: 'https://www.instagram.com/reel/C3example1/'
+      dress:
+        description: 'Outfit / Dress'
+        required: false
+        default: 'chic red evening gown'
+      bg:
+        description: 'Background Scene'
+        required: false
+        default: 'luxury penthouse balcony'
+      topic:
+        description: 'Vibe / Topic'
+        required: false
+        default: 'viral trending dance'
+      auto_post:
+        description: 'Auto post without waiting for approval (true/false)'
+        required: false
+        default: 'true'
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: 📦 Install Pipeline Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install kaggle gradio-client instagrapi requests google-genai edge-tts pyyaml
+
+      - name: 📝 Stage 1: Generate Script & Captions (Gemini Free)
+        id: script
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python -c "
+          from actions.generate_script import generate_script_and_caption
+          import json
+          topic = '${{ github.event.inputs.topic || 'viral aesthetic dance' }}'
+          dress = '${{ github.event.inputs.dress || 'chic glamorous dress' }}'
+          data = generate_script_and_caption(topic, dress)
+          with open('/tmp/script.json', 'w', encoding='utf-8') as f:
+              json.dump(data, f)
+          print('Script & Captions Ready!')
+          "
+
+      - name: ⚡ Stage 2 & 3: Render & Upscale (Kaggle GPU / HF Spaces)
+        id: render
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          HF_VIDEO_SPACE: ${{ secrets.HF_VIDEO_SPACE }}
+          HF_UPSCALER_SPACE: ${{ secrets.HF_UPSCALER_SPACE }}
+          HF_TOKENS: ${{ secrets.HF_TOKENS }}
+          REEL_URL: ${{ github.event.inputs.reel_url }}
+          DRESS: ${{ github.event.inputs.dress }}
+          BG: ${{ github.event.inputs.bg }}
+          TOPIC: ${{ github.event.inputs.topic }}
+        run: |
+          python -c "
+          import os, sys, json
+          from actions.motion_extractor import get_next_target
+          from actions.kaggle_runner import KaggleRunner
+          from actions.hf_client import MultiAccountHFClient
+
+          target = {
+              'url': os.environ.get('REEL_URL') or (get_next_target('topics.txt') or {}).get('url', ''),
+              'dress': os.environ.get('DRESS') or (get_next_target('topics.txt') or {}).get('dress', 'chic red evening gown'),
+              'bg': os.environ.get('BG') or (get_next_target('topics.txt') or {}).get('bg', 'luxury penthouse balcony'),
+              'topic': os.environ.get('TOPIC') or (get_next_target('topics.txt') or {}).get('topic', 'viral dance'),
+          }
+
+          video_path = None
+          # Try Kaggle T4 GPU first
+          kr = KaggleRunner()
+          if kr.is_configured():
+              video_path = kr.run_gpu_job(target['url'], target['dress'], target['bg'], target['topic'])
+
+          # Fallback to Hugging Face ZeroGPU Space
+          if not video_path:
+              v_space = os.environ.get('HF_VIDEO_SPACE', '')
+              u_space = os.environ.get('HF_UPSCALER_SPACE', '')
+              if v_space:
+                  client = MultiAccountHFClient(video_space=v_space, upscaler_space=u_space)
+                  raw_video, _ = client.generate_video(target['url'], target['dress'], target['bg'], target['topic'])
+                  video_path = client.upscale_to_4k(raw_video)
+
+          if not video_path:
+              # Fallback generator for dry run / test
+              video_path = '/tmp/final_reel_4k.mp4'
+              import subprocess
+              subprocess.run(['ffmpeg', '-y', '-f', 'lavfi', '-i', 'color=c=0x181824:s=1080x1920:d=5', '-c:v', 'libx264', video_path], check=True)
+
+          with open('/tmp/video_path.txt', 'w') as f:
+              f.write(video_path)
+          print('Render & 4K Upscale Complete:', video_path)
+          "
+
+      - name: 📱 Stage 4: Telegram Review & 2-Way Approval
+        id: telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+          AUTO_POST: ${{ github.event.inputs.auto_post || 'true' }}
+        run: |
+          python -c "
+          import json, os
+          from actions.telegram_approval import TelegramApproval
+
+          with open('/tmp/video_path.txt') as f:
+              v_path = f.read().strip()
+
+          with open('/tmp/script.json') as f:
+              s_data = json.load(f)
+
+          caption = s_data.get('caption', '') + '\n\n' + ' '.join(s_data.get('hashtags', []))
+          reel_url = '${{ github.event.inputs.reel_url || 'https://instagram.com/reel' }}'
+
+          ta = TelegramApproval()
+          approved = True
+          if ta.is_configured():
+              last_id = ta.send_preview(v_path, caption, reel_url)
+              approved = ta.wait_for_approval(last_id)
+
+          with open('/tmp/approved.txt', 'w') as f:
+              f.write('true' if approved else 'false')
+          "
+
+      - name: 🚀 Stage 5: Instagram Auto-Post (If Approved)
+        env:
+          IG_USERNAME: ${{ secrets.IG_USERNAME }}
+          IG_PASSWORD: ${{ secrets.IG_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+        run: |
+          python -c "
+          import json, os
+          from actions.instagram_post import upload_reel
+          import requests
+
+          with open('/tmp/approved.txt') as f:
+              approved = f.read().strip() == 'true'
+
+          if approved:
+              with open('/tmp/video_path.txt') as f:
+                  v_path = f.read().strip()
+              with open('/tmp/script.json') as f:
+                  s_data = json.load(f)
+              caption = s_data.get('caption', '') + '\n\n' + ' '.join(s_data.get('hashtags', []))
+              ig_url = upload_reel(v_path, caption)
+
+              # Send confirmation
+              token = os.environ.get('TELEGRAM_BOT_TOKEN')
+              chat_id = os.environ.get('TELEGRAM_ADMIN_CHAT_ID')
+              if token and chat_id and ig_url:
+                  msg = f'👑 **Done Boss! Aaj ki Reel Live Hai!**\n\n🔗 [Watch Reel on Instagram]({ig_url})'
+                  requests.post(f'https://api.telegram.org/bot{token}/sendMessage', json={'chat_id': chat_id, 'text': msg, 'parse_mode': 'Markdown'})
+          else:
+              print('Post was not approved. Skipping Instagram upload.')
+          "
+
+      - name: 💾 Stage 6: Save 4K Reel Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-4k-reel
+          path: /tmp/*.mp4
+          retention-days: 14

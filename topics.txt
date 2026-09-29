@@ -1,0 +1,11 @@
+# ═════════════════════════════════════════════════════════════════
+# AI-INFLUENCER-OS — Daily Topic & Dance Reel Queue
+# Roz sirf 1 line add karo (ya default chhod do).
+# Format: <reel_url> --dress "outfit" --bg "scene" --topic "vibe"
+# ═════════════════════════════════════════════════════════════════
+
+https://www.instagram.com/reel/C3example1/ --dress "red satin evening gown" --bg "luxury penthouse balcony" --topic "night out glam dance"
+https://www.instagram.com/reel/C3example2/ --dress "chic casual oversized hoodie and cargo pants" --bg "cyberpunk neon street" --topic "urban hip hop dance"
+https://www.instagram.com/reel/C3example3/ --dress "traditional indian saree with gold jewelry" --bg "royal palace courtyard" --topic "festive grace celebration"
+https://www.instagram.com/reel/C3example4/ --dress "summer floral sundress" --bg "tropical sunset beach" --topic "breezy vacation vibes"
+https://www.instagram.com/reel/C3example5/ --dress "black leather jacket and ripped jeans" --bg "tokyo shibuya crosswalk" --topic "aesthetic city stroll"

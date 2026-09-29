@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Data & local databases (Keep directories with .gitkeep)
+data/*.db
+data/backups/
+data/qdrant_db/
+data/ig_session.json
+data/token.json
+!data/.gitkeep
+
+# Heavy Model weights (Store in HF / Drive)
+models/lora/*.safetensors
+models/voice/*.wav
+*.ckpt
+*.pt
+*.bin
+!models/lora/.gitkeep
+!models/voice/.gitkeep
+
+# Rendered outputs
+output/
+kaggle_output/
+*.mp4
+*.wav
+*.png
+!spaces/**/*.png
+!dashboard/**/*.png
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
