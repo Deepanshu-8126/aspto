@@ -1,0 +1,37 @@
+{
+  "influencer": {
+    "id": "inf_aisha_01",
+    "name": "Aisha Verma",
+    "handle": "@aisha.verma_ai",
+    "niche": [
+      "fashion",
+      "luxury_lifestyle",
+      "skincare",
+      "dance"
+    ],
+    "base_model": "SDXL-Juggernaut-v8",
+    "lora_path": "models/lora/my_face.safetensors",
+    "lora_weight": 0.92,
+    "preferred_video_engine": "wan2.7",
+    "voice_engine": "qwen3_tts",
+    "character_traits": {
+      "vibe": "warm, stylish, playful, hyper-aesthetic",
+      "slang": "Hinglish, chic, subtle Gen-Z emojis"
+    },
+    "stats": {
+      "followers_aggregate": 142500,
+      "engagement_rate": 8.4,
+      "active_brand_deals": 4
+    }
+  },
+  "recent_generations": [
+    {
+      "id": "gen_1790711181",
+      "topic": "glass skin routine",
+      "video_url": "output/video/reel_01.mp4",
+      "engine": "wan2.7",
+      "created_at": "2026-09-30T01:16:21.595996",
+      "views": 0
+    }
+  ]
+}

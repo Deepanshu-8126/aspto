@@ -131,9 +131,27 @@ face_engine:
     restore_face: "CodeFormer"
     face_restore_visibility: 1.0
 
-# ── Video Engine (Wan2.2 + LTX-2.5 + Duix) ──
+# ── Video Engine (Wan2.7 + HappyHorse-1.0 + SkyReels-V2 + Hunyuan-1.5 + Wan2.2 + LTX-2.5) ──
 video_engine:
-  default_engine: "wan2.2"        # "wan2.2" (MoE, 30% faster), "ltx_2.5", "duix"
+  default_engine: "wan2.7"        # "wan2.7" (exact first/last frame control), "happyhorse" (4K #1), "skyreels_v2" (33 expressions), "hunyuan_1.5" (75s continuous)
+  wan2_7:
+    model: "Wan-Video/Wan2.7"
+    first_frame_control: true
+    last_frame_control: true
+    grid_9_input: true
+  happyhorse_1_0:
+    model: "HappyHorse/HappyHorse-1.0"
+    resolution: "2160x3840"        # 4K Ultra HD cinematic
+    crf: 17
+  skyreels_v2:
+    model: "Skywork/SkyReels-V2"
+    expressions: 33
+    motions: 400
+    default_expression: "confident_smile"
+  hunyuan_1_5:
+    model: "Tencent/HunyuanVideo-1.5"
+    continuous_duration: 75        # full 75-second reel in 1 shot
+    params: "8.3B"
   wan2_2:
     model: "Wan-Video/Wan2.2-MoE"
     fps: 30
@@ -155,6 +173,23 @@ voice_engine:
   gpt_sovits:
     ref_audio: "models/voice/reference.wav"
     few_shot: true
+
+# ── AI Director & Programmatic Studio (openblur + HyperFrames + DaanKieft Studio) ──
+openblur_agent:
+  enabled: true
+  director: "AI Squid Agent"
+  auto_storyboard: true
+  default_pacing: "audio_reactive"
+
+hyperframes:
+  enabled: true
+  theme: "luxury_gold"            # "luxury_gold", "neon_cyberpunk", "clean_minimal"
+  karaoke_captions: true
+
+studio_web_app:
+  adapter: "DaanKieft/ai-influencer"
+  local_first: true
+  storage: "data/studio_profile.json"
 
 # ── Publish Engine (Agentfy + Automie + Auto-Reels) ──
 publish_engine:

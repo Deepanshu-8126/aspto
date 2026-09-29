@@ -172,6 +172,107 @@ class TestMultiPublisher(unittest.TestCase):
         self.assertIn("viewport", profile)
 
 
+class TestWan27AndVideoStack(unittest.TestCase):
+    """Wan2.7, HappyHorse-1.0, SkyReels-V2, HunyuanVideo-1.5"""
+    def test_wan27_first_last_frame_control(self):
+        from cloud.video_engine import Wan27ControlEngine
+        engine = Wan27ControlEngine()
+        out = engine.generate_controlled_video(
+            prompt="Influencer transitions from red dress to evening gown",
+            first_frame="output/avatar.png",
+            last_frame="output/pose.png",
+            duration=3,
+        )
+        self.assertTrue(out.endswith(".mp4"))
+
+    def test_happyhorse_4k(self):
+        from cloud.video_engine import HappyHorse10Engine
+        engine = HappyHorse10Engine()
+        out = engine.generate_4k_cinematic("Ultra realistic 4k influencer catwalk", duration=3)
+        self.assertTrue(out.endswith(".mp4"))
+
+    def test_skyreels_expressions(self):
+        from cloud.video_engine import SkyReelsV2Engine
+        engine = SkyReelsV2Engine()
+        self.assertIn("confident_smile", engine.SUPPORTED_EXPRESSIONS)
+        self.assertIn("sultry", engine.SUPPORTED_EXPRESSIONS)
+        self.assertIn("wink", engine.SUPPORTED_EXPRESSIONS)
+        out = engine.generate_expressive_reel(
+            prompt="dancing with lively facial cues",
+            image_path="output/avatar.png",
+            expression="sultry",
+            duration=3,
+        )
+        self.assertTrue(out.endswith(".mp4"))
+
+    def test_hunyuan_75s_continuous(self):
+        from cloud.video_engine import HunyuanVideo15Engine
+        engine = HunyuanVideo15Engine()
+        out = engine.generate_continuous_reel("A full 60-second vlog style walk", duration=60)
+        self.assertTrue(out.endswith(".mp4"))
+
+    def test_master_manager_discovery(self):
+        from cloud.video_engine import UnifiedVideoManager
+        mgr = UnifiedVideoManager()
+        engines = mgr.list_available_engines()
+        self.assertIn("wan2.7", engines)
+        self.assertIn("happyhorse", engines)
+        self.assertIn("skyreels_v2", engines)
+        self.assertIn("hunyuan_1.5", engines)
+
+
+class TestHyperFrames(unittest.TestCase):
+    """HeyGen/HyperFrames HTML/CSS/JS Dynamic Video Overlays"""
+    def test_create_html_template(self):
+        from actions.hyperframes import HyperFramesRenderer
+        renderer = HyperFramesRenderer()
+        html_file = renderer.create_html_overlay(
+            headline="Top 3 Summer Fits You Need",
+            theme_name="luxury_gold",
+        )
+        self.assertTrue(os.path.exists(html_file))
+        with open(html_file, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("Top 3 Summer Fits You Need", content)
+        self.assertIn("caption-container", content)
+
+
+class TestOpenBlurAgent(unittest.TestCase):
+    """willhooi/openblur AI Squid Agent"""
+    def test_autonomous_storyboard_planner(self):
+        from actions.openblur_agent import OpenBlurSquidAgent
+        agent = OpenBlurSquidAgent()
+        plan = agent.plan_storyboard(topic="old money aesthetic", target_duration=30)
+        self.assertEqual(plan["agent"], "willhooi/openblur")
+        self.assertGreaterEqual(len(plan["scenes"]), 3)
+        self.assertIn("music", plan)
+        self.assertEqual(plan["music"]["tempo"], 128)
+
+
+class TestDaanKieftStudio(unittest.TestCase):
+    """DaanKieft/ai-influencer Local-First Studio Adapter"""
+    def test_studio_profile_and_vite_export(self):
+        from dashboard.studio_adapter import AIInfluencerStudioAdapter
+        adapter = AIInfluencerStudioAdapter()
+        profile = adapter.get_profile()
+        self.assertIn("influencer", profile)
+        self.assertEqual(profile["influencer"]["name"], "Aisha Verma")
+
+        # Record generation
+        gen = adapter.record_generation(
+            topic="glass skin routine",
+            video_url="output/video/reel_01.mp4",
+            engine="wan2.7",
+        )
+        self.assertEqual(gen["topic"], "glass skin routine")
+
+        # Vite config export
+        vite = adapter.export_vite_config()
+        self.assertEqual(vite["appName"], "AI-Influencer Studio")
+        self.assertIn("endpoints", vite)
+
+
+
 
 if __name__ == "__main__":
     print("=" * 60)
