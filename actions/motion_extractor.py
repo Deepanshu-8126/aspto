@@ -87,3 +87,25 @@ def get_next_target(primary_file: str = "topics.txt", fallback_file: str = "link
             print(f"Queue rotate note: {e}")
 
     return target_data
+
+
+def add_custom_target(url: str, dress: str, bg: str, topic: str = "viral dance aesthetic", priority: bool = True) -> str:
+    """Adds a custom motion link to topics.txt for on-demand or next auto-run."""
+    clean_url = url.strip()
+    formatted = f'{clean_url} --dress "{dress.strip()}" --bg "{bg.strip()}" --topic "{topic.strip()}"\n'
+
+    file_path = "topics.txt"
+    lines = []
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+    if priority:
+        lines.insert(0, formatted)
+    else:
+        lines.append(formatted)
+
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+
+    return formatted.strip()
