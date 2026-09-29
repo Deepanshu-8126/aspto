@@ -262,29 +262,32 @@ def get_leads_data():
 
 # ── Gradio Dashboard Layout ───────────────────────────────
 
-def build_dashboard():
-    custom_css = """
-    .gradio-container { max-width: 1250px !important; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-    .hero-title {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 2.8em !important;
-        font-weight: 800 !important;
-        margin-bottom: 0px !important;
-    }
-    .badge {
-        display: inline-block;
-        background: #e2e8f0;
-        color: #4a5568;
-        padding: 4px 10px;
-        border-radius: 9999px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    """
+CUSTOM_CSS = """
+.gradio-container { max-width: 1250px !important; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+.hero-title {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2.8em !important;
+    font-weight: 800 !important;
+    margin-bottom: 0px !important;
+}
+.badge {
+    display: inline-block;
+    background: #e2e8f0;
+    color: #4a5568;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+"""
 
+
+def build_dashboard():
     with gr.Blocks(title="AIInfluencerOS — Master Studio") as app:
+
+
         with gr.Row():
             with gr.Column(scale=9):
                 gr.Markdown("# 🎬 AI-INFLUENCER-OS", elem_classes=["hero-title"])
@@ -457,10 +460,14 @@ def build_dashboard():
 
 if __name__ == "__main__":
     app = build_dashboard()
+    port = int(os.environ.get("PORT", 7860))
+    print(f"🚀 Starting AI-INFLUENCER-OS Studio Dashboard on http://127.0.0.1:{port}...")
     app.launch(
         server_name="0.0.0.0",
-        server_port=7861,
+        server_port=port,
         share=False,
         show_error=True,
-        css=custom_css,
+        css=CUSTOM_CSS,
     )
+
+
