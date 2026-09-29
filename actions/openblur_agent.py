@@ -108,7 +108,7 @@ class OpenBlurSquidAgent:
     def execute_autonomous_production(
         self,
         topic: str,
-        engine: str = "wan2.7",
+        engine: str = "wan2.2_flf2v",
         voice_engine_name: str = "qwen3_tts",
     ) -> Dict[str, Any]:
         """

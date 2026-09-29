@@ -215,10 +215,12 @@ class TestWan27AndVideoStack(unittest.TestCase):
         from cloud.video_engine import UnifiedVideoManager
         mgr = UnifiedVideoManager()
         engines = mgr.list_available_engines()
-        self.assertIn("wan2.7", engines)
+        self.assertIn("wan2.2_flf2v", engines)
+        self.assertIn("wan2.2", engines)
+        self.assertIn("hunyuan_1.5", engines)
         self.assertIn("happyhorse", engines)
         self.assertIn("skyreels_v2", engines)
-        self.assertIn("hunyuan_1.5", engines)
+
 
 
 class TestHyperFrames(unittest.TestCase):

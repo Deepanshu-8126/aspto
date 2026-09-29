@@ -37,7 +37,7 @@ class AIInfluencerStudioAdapter:
                 "base_model": "SDXL-Juggernaut-v8",
                 "lora_path": "models/lora/my_face.safetensors",
                 "lora_weight": 0.92,
-                "preferred_video_engine": "wan2.7",
+                "preferred_video_engine": "wan2.2_flf2v",
                 "voice_engine": "qwen3_tts",
                 "character_traits": {
                     "vibe": "warm, stylish, playful, hyper-aesthetic",
@@ -76,7 +76,7 @@ class AIInfluencerStudioAdapter:
         self,
         topic: str,
         video_url: str,
-        engine: str = "wan2.7",
+        engine: str = "wan2.2_flf2v",
         views: int = 0,
     ) -> Dict[str, Any]:
         """Appends generated asset into the studio gallery."""

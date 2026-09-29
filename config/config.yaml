@@ -97,11 +97,12 @@ pipeline:
   comfyui_url: "http://127.0.0.1:8188"
   sd_model: "v1-5-pruned.safetensors"
   lora_strength: 0.90
-  wan_model: "Wan-Video/Wan2.7"    # First/Last Frame exact trajectory
-  hunyuan_model: "Tencent/HunyuanVideo-1.5" # 75s continuous full reel
+  wan_model: "Wan-AI/Wan2.2-FLF2V-14B"  # First/Last Frame exact trajectory (Apache 2.0, 16GB)
+  hunyuan_model: "Tencent/HunyuanVideo-1.5" # 75s continuous full reel (Apache 2.0, 16GB)
   voice_model: "QwenLM/Qwen3-TTS"  # 3s clone, 97ms, Apache 2.0
   video_clip_duration: 30         # seconds per reel
   num_clips: 1                    # Single-shot 1 continuous pass
+
 
 
 # ── Rate Limits ──
@@ -135,34 +136,41 @@ face_engine:
     restore_face: "CodeFormer"
     face_restore_visibility: 1.0
 
-# ── Video Engine (Wan2.7 + HappyHorse-1.0 + SkyReels-V2 + Hunyuan-1.5 + Wan2.2 + LTX-2.5) ──
+# ── Video Engine (Wan2.2 FLF2V + Hunyuan-1.5 + SkyReels-V2 + HappyHorse-1.0) ──
 video_engine:
-  default_engine: "wan2.7"        # "wan2.7" (exact first/last frame control), "happyhorse" (4K #1), "skyreels_v2" (33 expressions), "hunyuan_1.5" (75s continuous)
-  wan2_7:
-    model: "Wan-Video/Wan2.7"
-    first_frame_control: true
-    last_frame_control: true
-    grid_9_input: true
-  happyhorse_1_0:
-    model: "HappyHorse/HappyHorse-1.0"
-    resolution: "2160x3840"        # 4K Ultra HD cinematic
-    crf: 17
+  default_engine: "wan2.2_flf2v"  # "wan2.2_flf2v" (open weights Wan-AI/Wan2.2-FLF2V-14B on HF), "hunyuan_1.5" (75s continuous), "skyreels_v2" (33 expressions)
+  sequential_execution: true      # runs 1 model at a time on Kaggle T4 to stay within 16GB VRAM
+  wan2_2_flf2v:
+    model: "Wan-AI/Wan2.2-FLF2V-14B"
+    license: "Apache 2.0"
+    vram_profile: "14-16GB (Kaggle T4 / Colab GPU)"
+    first_frame_control: true     # Influencer Face
+    last_frame_control: true      # Target Pose
+  hunyuan_1_5:
+    model: "Tencent/HunyuanVideo-1.5"
+    license: "Apache 2.0"
+    continuous_duration: 75       # full 75-second reel in 1 shot
+    params: "8.3B"
+    vram_profile: "14-16GB"
   skyreels_v2:
     model: "Skywork/SkyReels-V2"
     expressions: 33
     motions: 400
+    vram_profile: "14GB"
     default_expression: "confident_smile"
-  hunyuan_1_5:
-    model: "Tencent/HunyuanVideo-1.5"
-    continuous_duration: 75        # full 75-second reel in 1 shot
-    params: "8.3B"
+  happyhorse_1_0:
+    model: "HappyHorse/HappyHorse-1.0"
+    resolution: "2160x3840"       # 4K Ultra HD cinematic
+    crf: 17
   wan2_2:
-    model: "Wan-Video/Wan2.2-MoE"
+    model: "Wan-AI/Wan2.2-T2V-A14B"
+    license: "Apache 2.0"
     fps: 30
     duration: 5
   ltx_2_5:
     model: "Lightricks/LTX-2.5"
     params: "22B"
+
     single_pass_audio: true
   duix_avatar:
     offline_mode: true
