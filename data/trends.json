@@ -1,0 +1,55 @@
+{
+  "updated_at": "2026-09-30T01:13:38.678164",
+  "trends": [
+    {
+      "topic": "Old Money Aesthetic vs Streetwear Fusion",
+      "category": "fashion",
+      "viral_score": 96.5,
+      "velocity": "high",
+      "trending_audio": "Stereo Love (Slowed + Reverb)",
+      "suggested_dress": "tailored ivory blazer with vintage sunglasses",
+      "suggested_bg": "Parisian style cafe balcony",
+      "hook": "Stop wearing oversized tees the boring way! Here is the 2026 rule..."
+    },
+    {
+      "topic": "Glass Skin Routine in 30 Seconds",
+      "category": "skincare",
+      "viral_score": 94.2,
+      "velocity": "very_high",
+      "trending_audio": "Aesthetic Lo-Fi Chill Synth",
+      "suggested_dress": "silk minimalist loungewear robe",
+      "suggested_bg": "warm vanity mirror with morning sun glow",
+      "hook": "Dermatologists won't tell you this one vitamin C trick..."
+    },
+    {
+      "topic": "Bolly-Hop Viral Hook Step Trend",
+      "category": "dance",
+      "viral_score": 98.8,
+      "velocity": "explosive",
+      "trending_audio": "Tauba Tauba x Hip-Hop Remix",
+      "suggested_dress": "metallic red cargo pants with cropped corset top",
+      "suggested_bg": "cyberpunk neon Mumbai street at night",
+      "hook": "Everyone is trying this step, but watch till the end!"
+    },
+    {
+      "topic": "5 Budget Fragrances that Smell Like \u20b915,000",
+      "category": "lifestyle",
+      "viral_score": 91.0,
+      "velocity": "high",
+      "trending_audio": "Luxury Synthwave Ambient",
+      "suggested_dress": "emerald green satin halter dress",
+      "suggested_bg": "marble luxury hotel lobby",
+      "hook": "Smell expensive on a student budget. Thank me later! \u2728"
+    },
+    {
+      "topic": "The 10-Minute Night Owl Productivity Habit",
+      "category": "productivity",
+      "viral_score": 88.5,
+      "velocity": "medium",
+      "trending_audio": "Interstellar Theme Lofi",
+      "suggested_dress": "cozy cashmere sweater and reading glasses",
+      "suggested_bg": "aesthetic book corner with fairy lights",
+      "hook": "If you wake up tired every morning, change this ONE habit tonight."
+    }
+  ]
+}

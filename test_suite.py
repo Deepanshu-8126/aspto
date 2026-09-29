@@ -86,6 +86,93 @@ class TestDashboardBuild(unittest.TestCase):
         self.assertIsNotNone(app)
 
 
+class TestViralTrendEngine(unittest.TestCase):
+    """aman-a-k/viralis + mutonby/openshorts"""
+    def test_trend_detection_and_ranking(self):
+        from actions.trend_engine import ViralTrendEngine
+        engine = ViralTrendEngine()
+        trends = engine.fetch_trending_topics(limit=5)
+        self.assertGreaterEqual(len(trends), 3)
+        top = engine.auto_select_best_trend()
+        self.assertIsNotNone(top)
+        self.assertIn("score", top)
+        self.assertGreaterEqual(top["score"], 0.70)
+
+    def test_openshorts_slicing(self):
+        from actions.trend_engine import OpenShortsClipper
+        clipper = OpenShortsClipper()
+        clips = clipper.detect_viral_segments(duration_sec=60)
+        self.assertTrue(len(clips) > 0)
+        self.assertIn("start", clips[0])
+        self.assertIn("end", clips[0])
+
+
+class TestFaceEngine(unittest.TestCase):
+    """facefusion/facefusion + Gourieff/ComfyUI-ReActor + LoRA"""
+    def test_triple_face_lock_pipeline(self):
+        from actions.face_engine import FaceFusionEngine, ReActorNodeBuilder
+        ff = FaceFusionEngine()
+        status = ff.is_installed()
+        self.assertIsInstance(status, bool)
+
+        builder = ReActorNodeBuilder()
+        workflow = builder.generate_comfyui_workflow("actor_node", "influencer.png")
+        self.assertIn("node_id", workflow)
+        self.assertEqual(workflow["class_type"], "ReActorFaceSwap")
+
+
+class TestVoiceEngine(unittest.TestCase):
+    """RVC-Boss/GPT-SoVITS + QwenLM/Qwen3-TTS"""
+    def test_voice_cloning_manager(self):
+        from cloud.voice_engine import VoiceCloningManager
+        manager = VoiceCloningManager()
+        self.assertIn("qwen3_tts", manager.engines)
+        self.assertIn("gpt_sovits", manager.engines)
+        # Verify voice synthesis output path structure
+        out_path = manager.synthesize("Hello world test voice", engine="qwen3_tts")
+        self.assertTrue(str(out_path).endswith(".wav"))
+
+
+class TestVideoEngine(unittest.TestCase):
+    """Wan-Video/Wan2.2 + Lightricks/LTX-2.5 + duixcom/Duix-Avatar"""
+    def test_unified_video_manager(self):
+        from cloud.video_engine import UnifiedVideoManager
+        manager = UnifiedVideoManager()
+        engines = manager.list_available_engines()
+        self.assertIn("wan2.2", engines)
+        self.assertIn("ltx_2.5", engines)
+        self.assertIn("duix_avatar", engines)
+
+        res = manager.generate("A chic model walking down the ramp", engine="wan2.2")
+        self.assertEqual(res["engine"], "wan2.2")
+        self.assertEqual(res["status"], "success")
+
+
+class TestMultiPublisher(unittest.TestCase):
+    """Agentfy-io/Agentfy + cedonulfi/automie + ilias20055/Auto-Reels-Generator"""
+    def test_agentfy_5_platform_broadcast(self):
+        from actions.multi_publisher import AgentfyMultiPublisher
+        publisher = AgentfyMultiPublisher()
+        results = publisher.broadcast_to_all(
+            content_path="test_reel.mp4",
+            caption="Viral AI influencer reel #ai #trending",
+            platforms=["instagram", "youtube_shorts", "tiktok", "x_twitter", "whatsapp"]
+        )
+        self.assertEqual(len(results), 5)
+        self.assertTrue(all(r["status"] == "published" for r in results.values()))
+
+    def test_automie_anti_ban_shield(self):
+        from actions.multi_publisher import AutomieAntiBanShield
+        shield = AutomieAntiBanShield()
+        delay = shield.compute_human_delay()
+        self.assertGreaterEqual(delay, 2.0)
+        self.assertLessEqual(delay, 12.0)
+        profile = shield.get_browser_profile()
+        self.assertIn("user_agent", profile)
+        self.assertIn("viewport", profile)
+
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("🧪 Running AI-INFLUENCER-OS Test Suite...")

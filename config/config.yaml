@@ -107,3 +107,64 @@ rate_limits:
   instagram_comments_per_hour: 20
   whatsapp_dms_per_day: 50
   generation_per_day: 10
+
+# ── Trend & Viral Engine (OpenShorts + Viralis) ──
+trends:
+  engine: "viralis"               # "viralis", "openshorts", or "hybrid"
+  viral_threshold: 0.70
+  sources:
+    - "youtube_shorts"
+    - "instagram_reels"
+    - "google_trends"
+  mcp_server_enabled: true
+  auto_slice_duration: 30         # seconds
+
+# ── Face Engine (Triple Face Lock) ──
+face_engine:
+  primary: "facefusion"           # "facefusion" (26K ⭐), "reactor", or "lora"
+  triple_lock_enabled: true       # LoRA + FaceFusion + ReActor
+  facefusion:
+    swapper_model: "inswapper_128_fp16"
+    enhancer_model: "gfpgan_1.4"
+    execution_providers: ["cuda", "cpu"]
+  reactor:
+    restore_face: "CodeFormer"
+    face_restore_visibility: 1.0
+
+# ── Video Engine (Wan2.2 + LTX-2.5 + Duix) ──
+video_engine:
+  default_engine: "wan2.2"        # "wan2.2" (MoE, 30% faster), "ltx_2.5", "duix"
+  wan2_2:
+    model: "Wan-Video/Wan2.2-MoE"
+    fps: 30
+    duration: 5
+  ltx_2_5:
+    model: "Lightricks/LTX-2.5"
+    params: "22B"
+    single_pass_audio: true
+  duix_avatar:
+    offline_mode: true
+    renderer: "Duix-Digital-Human"
+
+# ── Voice Engine (GPT-SoVITS + Qwen3-TTS) ──
+voice_engine:
+  primary: "qwen3_tts"            # "qwen3_tts" (3 sec, Apache 2.0) or "gpt_sovits" (1 min)
+  qwen3_tts:
+    sample_rate: 48000
+    languages: ["en", "hi", "es", "ja"]
+  gpt_sovits:
+    ref_audio: "models/voice/reference.wav"
+    few_shot: true
+
+# ── Publish Engine (Agentfy + Automie + Auto-Reels) ──
+publish_engine:
+  orchestrator: "agentfy"         # "agentfy" (1 agent -> 5 platforms)
+  anti_ban_shield: "automie"      # "automie" (Playwright + Gemini human-like mimicry)
+  auto_reels_one_click: true      # ilias20055/Auto-Reels-Generator
+  platforms:
+    instagram: true
+    youtube_shorts: true
+    tiktok: true
+    x_twitter: true
+    whatsapp: true
+

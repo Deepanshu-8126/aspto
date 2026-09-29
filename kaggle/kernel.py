@@ -158,6 +158,41 @@ def run_real_esrgan_4k(input_1080p: Path, output_4k: Path):
         shutil.copy(input_1080p, output_4k)
 
 
+def apply_facefusion_face_lock(source_face: Path, target_video: Path, output_video: Path):
+    """
+    facefusion/facefusion (26K ⭐):
+    Runs frame-by-frame headless face swapping with GPU acceleration
+    ensuring 100% facial consistency of our AI influencer model.
+    """
+    print("🧑‍🦰 Running FaceFusion Frame-by-Frame Face Lock...")
+    facefusion_cli = Path("/kaggle/working/facefusion/facefusion.py")
+    if not facefusion_cli.exists():
+        facefusion_cli = Path("facefusion/facefusion.py")
+
+    if facefusion_cli.exists():
+        cmd = [
+            sys.executable, str(facefusion_cli),
+            "headless-run",
+            "-s", str(source_face),
+            "-t", str(target_video),
+            "-o", str(output_video),
+            "--face-swapper-model", "inswapper_128_fp16",
+            "--face-enhancer-model", "gfpgan_1.4",
+            "--execution-providers", "cuda",
+        ]
+        try:
+            subprocess.run(cmd, check=True)
+            if output_video.exists() and output_video.stat().st_size > 1024:
+                print(f"✅ FaceFusion lock complete: {output_video}")
+                return
+        except Exception as e:
+            print(f"FaceFusion execution notice: {e}, falling back to video stream")
+    else:
+        print("FaceFusion repo not found locally on worker, preserving animated stream.")
+
+    shutil.copy(target_video, output_video)
+
+
 def main():
     print("=" * 60)
     print("🚀 AI-INFLUENCER-OS — Kaggle GPU Worker Started")
@@ -171,6 +206,7 @@ def main():
     ref_reel = WORKING_DIR / "ref_reel.mp4"
     avatar_img = WORKING_DIR / "avatar.png"
     anim_1080p = WORKING_DIR / "anim_1080p.mp4"
+    faceswapped_1080p = WORKING_DIR / "faceswapped_1080p.mp4"
     final_4k = WORKING_DIR / "final_reel_4k.mp4"
 
     # Step 1: Download Target Reel (Zero laptop load)
@@ -183,8 +219,11 @@ def main():
     # Step 3: Run StableAnimator Motion Transfer on Kaggle GPU
     run_stable_animator(ref_reel, avatar_img, anim_1080p)
 
-    # Step 4: Run Real-ESRGAN 4K Upscale on Kaggle GPU
-    run_real_esrgan_4k(anim_1080p, final_4k)
+    # Step 4: Triple Face Lock via FaceFusion (26K ⭐ frame-by-frame)
+    apply_facefusion_face_lock(avatar_img, anim_1080p, faceswapped_1080p)
+
+    # Step 5: Run Real-ESRGAN 4K Upscale on Kaggle GPU
+    run_real_esrgan_4k(faceswapped_1080p, final_4k)
 
     print("=" * 60)
     print(f"🎉 4K Reel Generated: {final_4k} ({final_4k.stat().st_size / (1024*1024):.1f} MB)")

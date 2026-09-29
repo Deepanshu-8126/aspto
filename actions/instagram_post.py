@@ -56,3 +56,8 @@ def upload_reel(
     except Exception as e:
         logger.error(f"Instagram upload failed: {e}")
         return None
+
+
+# Backward-compatible alias
+post_reel = upload_reel
+

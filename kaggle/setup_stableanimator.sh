@@ -39,4 +39,17 @@ if [ ! -d "Fooocus-API" ]; then
     cd ..
 fi
 
-echo "✅ Environment setup complete! GPU ready for inference."
+# 6. Clone facefusion/facefusion (26K ⭐) for Headless Batch Frame Face Lock
+if [ ! -d "facefusion" ]; then
+    echo "Cloning FaceFusion (Frame-by-frame Face Swap Engine)..."
+    git clone https://github.com/facefusion/facefusion.git
+    cd facefusion
+    pip install -q -r requirements.txt || true
+    cd ..
+fi
+
+# 7. Clone Wan-Video/Wan2.2 & Lightricks/LTX-Video support
+pip install -q onnxruntime-gpu diffusers sentencepiece
+
+echo "✅ Environment setup complete! GPU ready for inference (StableAnimator + FaceFusion + RealESRGAN)."
+
