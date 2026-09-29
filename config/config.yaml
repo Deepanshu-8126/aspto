@@ -82,7 +82,10 @@ scheduler:
 
 # ── Generation Pipeline ──
 pipeline:
-  image_engine: "fooocus"         # "fooocus" (recommended 10s SDXL) or "comfyui"
+  image_engine: "z_image"         # "z_image" (3s, 6GB VRAM, #1 Arena, Apache 2.0), "fooocus", "comfyui"
+  z_image_url: "http://127.0.0.1:8889"
+  z_image_model: "Tongyi-MAI/Z-Image-Turbo"
+  qwen_image_edit_url: "http://127.0.0.1:8890"
   fooocus_url: "http://127.0.0.1:8888"
   fooocus_base_model: "juggernautXL_v8Rundiffusion.safetensors"
   fooocus_styles:
@@ -94,11 +97,12 @@ pipeline:
   comfyui_url: "http://127.0.0.1:8188"
   sd_model: "v1-5-pruned.safetensors"
   lora_strength: 0.90
-  wan_model: "Wan2.1-T2V-1.3B"
-  musetalk_model: "musetalk_v1.5"
-  f5tts_model: "F5-TTS"
-  video_clip_duration: 5          # seconds per Wan2.1 clip
-  num_clips: 6                    # 6 x 5sec = 30sec reel
+  wan_model: "Wan-Video/Wan2.7"    # First/Last Frame exact trajectory
+  hunyuan_model: "Tencent/HunyuanVideo-1.5" # 75s continuous full reel
+  voice_model: "QwenLM/Qwen3-TTS"  # 3s clone, 97ms, Apache 2.0
+  video_clip_duration: 30         # seconds per reel
+  num_clips: 1                    # Single-shot 1 continuous pass
+
 
 # ── Rate Limits ──
 rate_limits:

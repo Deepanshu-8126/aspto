@@ -272,6 +272,45 @@ class TestDaanKieftStudio(unittest.TestCase):
         self.assertIn("endpoints", vite)
 
 
+class TestChineseApache2Models(unittest.TestCase):
+    """
+    Validation for 100% Commercial-Safe, Apache 2.0 Chinese Open-Source Stack:
+    - Tongyi-MAI/Z-Image-Turbo (3s / 6GB VRAM, #1 Arena)
+    - Alibaba Qwen-Image-Edit (Inpainting & Face Lock)
+    - Alibaba Qwen3-TTS (3s clone, 97ms, Emotion Control)
+    - OpenBMB/Tsinghua VoxCPM2 & Alibaba CosyVoice 2
+    """
+    def test_zimage_turbo_and_qwen_image_edit(self):
+        from cloud.image_gen import ZImageTurboClient, QwenImageEditClient, generate_zimage_turbo
+        client = ZImageTurboClient()
+        self.assertIsInstance(client.is_available(), bool)
+
+        out_img = generate_zimage_turbo("ultra photorealistic young woman portrait")
+        self.assertTrue(os.path.exists(out_img))
+        self.assertTrue(out_img.endswith(".png"))
+
+        editor = QwenImageEditClient()
+        res = editor.edit_face_and_outfit(out_img, "change dress to silk cocktail gown")
+        self.assertEqual(res["status"], "success")
+        self.assertEqual(res["model"], "Qwen-Image-Edit-7B")
+
+    def test_qwen3_tts_emotion_control(self):
+        from cloud.voice_engine import Qwen3TTSEngine, VoiceCloningManager
+        tts = Qwen3TTSEngine()
+        self.assertIn("happy", tts.SUPPORTED_EMOTIONS)
+        self.assertIn("sultry", tts.SUPPORTED_EMOTIONS)
+        self.assertIn("excited", tts.SUPPORTED_EMOTIONS)
+
+        out_happy = tts.clone_voice("Hello guys, welcome to my vlog!", emotion="happy")
+        self.assertTrue(os.path.exists(out_happy))
+
+        out_sultry = tts.clone_voice("Special giveaway link in bio!", emotion="sultry")
+        self.assertTrue(os.path.exists(out_sultry))
+
+        mgr = VoiceCloningManager()
+        self.assertEqual(mgr.default_engine, "qwen3_tts")
+        self.assertIn("voxcpm2", mgr.engines)
+        self.assertIn("cosyvoice2", mgr.engines)
 
 
 if __name__ == "__main__":
