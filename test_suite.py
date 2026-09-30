@@ -394,6 +394,42 @@ class TestDailyBatchGenerator(unittest.TestCase):
         self.assertEqual(len(data["slots"]), 5)
 
 
+class TestCommentToDMAgent(unittest.TestCase):
+    """
+    Tests for Xeven777/openinstadm automated comment-to-DM conversion agent.
+    """
+    def test_trigger_detection_and_dm_routing(self):
+        from actions.comment_to_dm import OpenInstaDMAgent
+        agent = OpenInstaDMAgent()
+
+        # Trigger detection
+        self.assertEqual(agent.detect_trigger("Where can I find the link to this dress?"), "link")
+        self.assertEqual(agent.detect_trigger("What is the price of this product?"), "price")
+        self.assertEqual(agent.detect_trigger("Love the outfit!"), "outfit")
+        self.assertIsNone(agent.detect_trigger("Just a random nice comment"))
+
+        # Process comment & lead conversion
+        res = agent.process_comment("priya_sharma", "Can you send me the link please?")
+        self.assertEqual(res["status"], "success")
+        self.assertEqual(res["trigger"], "link")
+        self.assertIn("AISHA50", res["dm_text"])
+        self.assertGreater(res["lead_id"], 0)
+
+
+class TestMubertMusicEngine(unittest.TestCase):
+    """
+    Tests for Mubert royalty-free AI background music generator.
+    """
+    def test_mood_track_generation(self):
+        from actions.music_engine import MubertMusicEngine
+        engine = MubertMusicEngine()
+        track = engine.get_track_for_mood(mood="chill", duration=5)
+        self.assertEqual(track["status"], "success")
+        self.assertEqual(track["mood"], "chill")
+        self.assertEqual(track["bpm"], 85)
+        self.assertTrue(os.path.exists(track["track_path"]))
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("🧪 Running AI-INFLUENCER-OS Test Suite...")

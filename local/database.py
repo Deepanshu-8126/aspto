@@ -469,6 +469,28 @@ def add_dm_lead(
         return lead_id
 
 
+def record_dm_lead(
+    username: str,
+    message: str = "",
+    platform: str = "instagram",
+    product_interest: str = "",
+    relationship_tier: str = "new",
+    intent: str = "general",
+    sentiment: str = "positive",
+    notes: str = "",
+) -> int:
+    """Convenience alias for recording incoming DM/comment lead."""
+    return add_dm_lead(
+        platform=platform,
+        username=username,
+        message=message,
+        product_interest=product_interest,
+        relationship_tier=relationship_tier,
+        intent=intent,
+        sentiment=sentiment,
+    )
+
+
 def get_dm_leads(platform: Optional[str] = None, status: Optional[str] = None, limit: int = 50) -> List[dict]:
     with get_connection() as conn:
         query = "SELECT * FROM dm_leads WHERE 1=1"
