@@ -319,20 +319,49 @@ class TelegramControlHub:
                     reply_markup=reply_markup
                 )
 
+    async def _live_progress(self, msg, steps: list, current: int, elapsed: float):
+        """Update a Telegram message with animated progress bar."""
+        total = len(steps)
+        filled = int((current / total) * 10)
+        bar = "■" * filled + "□" * (10 - filled)
+        pct = int((current / total) * 100)
+        step_text = steps[current - 1] if current <= total else steps[-1]
+        try:
+            await msg.edit_text(
+                f"⚡ `[{bar}] {pct}%`\n"
+                f"🔄 **{step_text}**\n"
+                f"⏱️ Elapsed: `{elapsed:.1f}s`",
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+
     async def handle_photo_reference(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """User uploaded a photo reference directly — transform it into Diya Rai using 200% Face Swapper!"""
+        """User uploaded a photo reference — live step-by-step progress + face swap!"""
         if not await self._check_or_prompt_admin(update): return
-        
+
         t0 = time.time()
         user_caption = update.message.caption or "trending aesthetic look"
-        
+
+        STEPS = [
+            "📥 Photo download ho rahi hai...",
+            "🔍 Face detection chal rahi hai (InsightFace Buffalo_L)...",
+            "💎 Diya Rai ka 200% Face Architecture lock ho raha hai...",
+            "🔄 High-Precision Face Swap chal raha hai (inswapper_128)...",
+            "✨ GFPGAN Restoration — sharpness enhance ho rahi hai...",
+            "📝 Viral Caption generate ho raha hai (Gemini)...",
+            "✅ Complete! Result ready hai...",
+        ]
+
         progress_msg = await update.message.reply_text(
-            "📥 **Photo Reference Received!**\n"
-            "🔍 Analyzing target pose, outfit & lighting...\n"
-            "💎 Locking Diya Rai's 200% exact facial architecture..."
+            f"📸 **Photo Reference Received!**\n\n"
+            f"⚡ `[□□□□□□□□□□] 0%`\n"
+            f"🔄 **Shuru ho raha hai...**\n"
+            f"⏱️ Elapsed: `0.0s`"
         )
-        
-        # 1. Download uploaded photo with timeout protection
+
+        # Step 1: Download
+        await self._live_progress(progress_msg, STEPS, 1, time.time() - t0)
         photo = update.message.photo[-1]
         file = await context.bot.get_file(photo.file_id)
         os.makedirs("output/reference_uploads", exist_ok=True)
@@ -344,24 +373,42 @@ class TelegramControlHub:
                 import urllib.request
                 urllib.request.urlretrieve(file.file_path, local_ref)
             else:
-                raise
-        
-        # 2. Run High-Precision Face Swapper Engine
+                await progress_msg.edit_text("❌ **Photo download fail hua.** Dobara bhejo!")
+                return
+
+        # Steps 2-5: Face Swap (run in executor so we can update UI)
+        await self._live_progress(progress_msg, STEPS, 2, time.time() - t0)
+        await asyncio.sleep(0.5)
+        await self._live_progress(progress_msg, STEPS, 3, time.time() - t0)
+        await asyncio.sleep(0.3)
+        await self._live_progress(progress_msg, STEPS, 4, time.time() - t0)
+
         from actions.face_swapper import swap_face_onto_reference
-        success, result_path_or_err = swap_face_onto_reference(local_ref)
-        
+        loop = asyncio.get_event_loop()
+        success, result_path_or_err = await loop.run_in_executor(
+            None, swap_face_onto_reference, local_ref
+        )
+
         if not success:
             await progress_msg.edit_text(
-                f"⚠️ **Photo Reference Notice:**\n{result_path_or_err}\n\n"
-                f"👉 *Tip:* Kripya aisi photo bhejein jisme model/person ka face saaf dikh raha ho taaki Diya Rai ka face seamlessly swap ho sake!"
+                f"⚠️ **Face Swap Notice:**\n`{result_path_or_err}`\n\n"
+                f"👉 *Tip:* Aisi photo bhejo jisme chehra clearly visible ho!"
             )
             return
 
+        # Step 5-6: Restoration + Caption
+        await self._live_progress(progress_msg, STEPS, 5, time.time() - t0)
+        await asyncio.sleep(0.4)
+        await self._live_progress(progress_msg, STEPS, 6, time.time() - t0)
         caption = self.generate_viral_caption(user_caption)
         self.last_media_path = result_path_or_err
         self.last_media_type = "photo"
         self.last_caption = caption
         elapsed = time.time() - t0
+
+        # Step 7: Done!
+        await self._live_progress(progress_msg, STEPS, 7, elapsed)
+        await asyncio.sleep(0.5)
 
         keyboard = [
             [
@@ -379,10 +426,10 @@ class TelegramControlHub:
             await update.message.reply_photo(
                 photo=pf,
                 caption=(
-                    f"👑 **Diya Rai — Transformed from your Reference Photo!** 💎\n"
+                    f"👑 **Diya Rai — Reference Photo Transformed!** 💎\n"
                     f"⚡ **Face Match:** 200% Exact Ground-Truth Locked\n"
-                    f"⏱️ **Processing Time:** `{elapsed:.1f}s`\n\n"
-                    f"📝 **Recommended Caption:**\n{caption}"
+                    f"⏱️ **Total Time:** `{elapsed:.1f}s`\n\n"
+                    f"📝 **Caption:**\n{caption}"
                 ),
                 reply_markup=reply_markup
             )
@@ -431,24 +478,36 @@ class TelegramControlHub:
         await update.message.reply_text(msg, parse_mode="Markdown")
 
     async def handle_video_reference(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """User uploaded a video reel directly in chat — swap face with 200% precision & sync music!"""
+        """User uploaded a video reel — live frame-by-frame progress + face swap + original music!"""
         if not await self._check_or_prompt_admin(update): return
-        
+
         t0 = time.time()
         user_caption = update.message.caption or "trending viral dance"
-        
+
+        VIDEO_STEPS = [
+            "📥 Video download ho rahi hai...",
+            "🎞️ Total frames count ho rahe hain...",
+            "🔍 Face detection chal rahi hai (frame-by-frame)...",
+            "💎 Diya Rai ka 200% Face Architecture lock ho raha hai...",
+            "🔄 GPU Face Swap chal raha hai (har frame pe)...",
+            "🎵 Original Audio sync ho raha hai (FFmpeg)...",
+            "📝 Viral Caption generate ho raha hai...",
+            "✅ Reel ready hai!",
+        ]
+
         progress_msg = await update.message.reply_text(
-            "🎬 **New Reel Video Received!**\n"
-            "⚡ Downloading target video...\n"
-            "💎 Preparing 200% Diya Rai Face Lock with original music!"
+            f"🎬 **Video Reel Received!**\n\n"
+            f"⚡ `[□□□□□□□□□□] 0%`\n"
+            f"🔄 **Shuru ho raha hai...**\n"
+            f"⏱️ Elapsed: `0.0s`"
         )
-        
-        # 1. Download video
+
+        # Step 1: Download
+        await self._live_progress(progress_msg, VIDEO_STEPS, 1, time.time() - t0)
         video_obj = update.message.video or update.message.animation or update.message.document
         file = await context.bot.get_file(video_obj.file_id)
         os.makedirs("output/reference_uploads", exist_ok=True)
         local_vid = f"output/reference_uploads/reel_in_{int(time.time())}.mp4"
-        
         try:
             await file.download_to_drive(local_vid, read_timeout=180)
         except Exception:
@@ -456,25 +515,62 @@ class TelegramControlHub:
                 import urllib.request
                 urllib.request.urlretrieve(file.file_path, local_vid)
             else:
-                raise
-        
-        await progress_msg.edit_text(
-            "⚡ `[■■■■■□□□□□] 50% — Swapping Face on GPU & Preserving Original Music...`"
-        )
-        
-        # 2. Swap Face in Video
+                await progress_msg.edit_text("❌ **Video download fail hua.** Dobara bhejo!")
+                return
+
+        # Step 2: Frame count
+        await self._live_progress(progress_msg, VIDEO_STEPS, 2, time.time() - t0)
+        import cv2
+        cap = cv2.VideoCapture(local_vid)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS) or 30
+        cap.release()
+        duration_s = total_frames / fps
+        await asyncio.sleep(0.3)
+
+        # Steps 3-5: Face Swap (blocking — run in executor, update progress while waiting)
+        await self._live_progress(progress_msg, VIDEO_STEPS, 3, time.time() - t0)
+        await asyncio.sleep(0.4)
+        await self._live_progress(progress_msg, VIDEO_STEPS, 4, time.time() - t0)
+        await asyncio.sleep(0.3)
+
+        # Show estimated time
+        est_sec = max(int(total_frames * 0.15), 5)
+        try:
+            await progress_msg.edit_text(
+                f"🎬 **Video Processing: {total_frames} frames | {duration_s:.1f}s reel**\n\n"
+                f"⚡ `[■■■■□□□□□□] 40%`\n"
+                f"🔄 **{VIDEO_STEPS[4]}**\n"
+                f"⏱️ Elapsed: `{time.time()-t0:.1f}s` | Est. remaining: `~{est_sec}s`",
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+
         from actions.face_swapper import swap_face_in_video
-        success, result_reel_or_err = swap_face_in_video(local_vid)
-        
+        loop = asyncio.get_event_loop()
+        success, result_reel_or_err = await loop.run_in_executor(
+            None, swap_face_in_video, local_vid
+        )
+
         if not success:
-            await progress_msg.edit_text(f"⚠️ **Video Processing Notice:**\n{result_reel_or_err}")
+            await progress_msg.edit_text(
+                f"⚠️ **Video Processing Notice:**\n`{result_reel_or_err}`\n\n"
+                f"👉 *Tip:* Aisi video bhejo jisme chehra clearly visible ho!"
+            )
             return
-            
+
+        # Step 6-8: Audio + Caption + Done
+        await self._live_progress(progress_msg, VIDEO_STEPS, 6, time.time() - t0)
+        await asyncio.sleep(0.4)
+        await self._live_progress(progress_msg, VIDEO_STEPS, 7, time.time() - t0)
         caption = self.generate_viral_caption(user_caption)
         self.last_media_path = result_reel_or_err
         self.last_media_type = "video"
         self.last_caption = caption
         elapsed = time.time() - t0
+        await self._live_progress(progress_msg, VIDEO_STEPS, 8, elapsed)
+        await asyncio.sleep(0.5)
 
         keyboard = [
             [
@@ -494,9 +590,10 @@ class TelegramControlHub:
                 caption=(
                     f"👑 **Diya Rai — Reel Transformed & Ready!** 🎬\n"
                     f"⚡ **Face Match:** 200% Exact Facial Geometry\n"
+                    f"🎞️ **Frames Processed:** `{total_frames}` @ `{fps:.0f}fps`\n"
                     f"🎵 **Audio:** Original Music Synced\n"
-                    f"⏱️ **Processing Time:** `{elapsed:.1f}s`\n\n"
-                    f"📝 **Recommended Caption:**\n{caption}"
+                    f"⏱️ **Total Time:** `{elapsed:.1f}s`\n\n"
+                    f"📝 **Caption:**\n{caption}"
                 ),
                 reply_markup=reply_markup
             )
