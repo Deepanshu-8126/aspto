@@ -60,6 +60,7 @@ class TelegramControlHub:
     def __init__(self):
         self.bot_token = BOT_TOKEN
         self.admin_chat_id = ADMIN_CHAT_ID
+        self.allowed_admins = {str(ADMIN_CHAT_ID)}
         self.last_media_path = None
         self.last_media_type = "video"
         self.last_caption = None
@@ -67,7 +68,51 @@ class TelegramControlHub:
         db.init_db()
 
     def _is_admin(self, update: Update) -> bool:
-        return str(update.effective_chat.id) == self.admin_chat_id
+        if not update or not update.effective_chat: return False
+        chat_id = str(update.effective_chat.id)
+        return chat_id in self.allowed_admins
+
+    async def _check_or_prompt_admin(self, update: Update) -> bool:
+        """Returns True if admin. If not, sends verification prompt with PIN."""
+        if self._is_admin(update):
+            return True
+        chat_id = str(update.effective_chat.id)
+        await update.message.reply_text(
+            f"🔐 **VERIFICATION CODE REQUIRED**\n\n"
+            f"Yeh Diya Rai (@diyarai_016) ka private Studio Control Hub hai.\n"
+            f"Aapka Telegram Chat ID: `{chat_id}`\n\n"
+            f"👉 **Activate karne ke liye abhi type karein:**\n"
+            f"`/verify 8126`\n\n"
+            f"Verification hote hi aap photo reference bhej kar instant face swap kar sakenge!",
+            parse_mode="Markdown"
+        )
+        return False
+
+    async def cmd_verify(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Authorize admin via verification PIN."""
+        chat_id = str(update.effective_chat.id)
+        code = context.args[0] if context.args else ""
+        if not code and update.message.text:
+            parts = update.message.text.split()
+            if len(parts) > 1: code = parts[1]
+
+        if code.strip() in ("8126", "8564"):
+            self.allowed_admins.add(chat_id)
+            await update.message.reply_text(
+                "✅ **VERIFICATION SUCCESSFUL!** 🎉\n\n"
+                "Aapka Telegram account successfully authorize ho gaya hai!\n\n"
+                "Ab aap:\n"
+                "1. 📸 **Koi bhi photo reference bhejo** — Diya Rai ka face 3-4 second me swap hokar aayega!\n"
+                "2. 👗 **Koi bhi outfit prompt likho** — (jaise: `red saree on terrace`)\n"
+                "3. 🎬 `/video [topic]` likhkar video reel banao!",
+                parse_mode="Markdown"
+            )
+        else:
+            await update.message.reply_text(
+                "❌ **Invalid Verification Code!**\n"
+                "Sahi format me type karein: `/verify 8126`",
+                parse_mode="Markdown"
+            )
 
     def generate_viral_caption(self, topic: str = "aesthetic look") -> str:
         """Use Gemini 3.5 Flash Lite to craft high-CTR viral caption & hashtag cluster."""
@@ -96,7 +141,7 @@ class TelegramControlHub:
 
     async def cmd_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Welcome menu and quick cheatsheet."""
-        if not self._is_admin(update): return
+        if not await self._check_or_prompt_admin(update): return
         msg = (
             "👑 **DIYA RAI AI INFLUENCER — TELEGRAM CONTROL ROOM** 🎬\n\n"
             "Yahan se aap Diya Rai ka har content control, generate aur direct Instagram par post kar sakte hain:\n\n"
@@ -122,7 +167,7 @@ class TelegramControlHub:
 
     async def cmd_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Real-time system, Instagram & daily limit status."""
-        if not self._is_admin(update): return
+        if not await self._check_or_prompt_admin(update): return
         
         today_posts = db.get_today_posts()
         post_count = len(today_posts)
@@ -146,7 +191,7 @@ class TelegramControlHub:
 
     async def cmd_video(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Generate high-accuracy reel with live progress timer."""
-        if not self._is_admin(update): return
+        if not await self._check_or_prompt_admin(update): return
         
         topic = " ".join(context.args) if context.args else "trending viral dance"
         t0 = time.time()
@@ -223,7 +268,7 @@ class TelegramControlHub:
 
     async def cmd_photo(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Generate 4K Diya Rai Photo with live timer & diverse poses."""
-        if not self._is_admin(update): return
+        if not await self._check_or_prompt_admin(update): return
         
         prompt = " ".join(context.args) if context.args else "chic modern aesthetic outfit"
         t0 = time.time()
@@ -276,7 +321,7 @@ class TelegramControlHub:
 
     async def handle_photo_reference(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """User uploaded a photo reference directly — transform it into Diya Rai using 200% Face Swapper!"""
-        if not self._is_admin(update): return
+        if not await self._check_or_prompt_admin(update): return
         
         t0 = time.time()
         user_caption = update.message.caption or "trending aesthetic look"
@@ -387,7 +432,7 @@ class TelegramControlHub:
 
     async def handle_text_prompt(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle incoming text messages: URLs, greetings, or free-form photo prompts."""
-        if not self._is_admin(update): return
+        if not await self._check_or_prompt_admin(update): return
         
         text = update.message.text or ""
         import re
@@ -436,6 +481,8 @@ class TelegramControlHub:
         app = Application.builder().token(self.bot_token).request(req).build()
         app.add_handler(CommandHandler("start", self.cmd_start))
         app.add_handler(CommandHandler("help", self.cmd_start))
+        app.add_handler(CommandHandler("verify", self.cmd_verify))
+        app.add_handler(CommandHandler("auth", self.cmd_verify))
         app.add_handler(CommandHandler("status", self.cmd_status))
         app.add_handler(CommandHandler("video", self.cmd_video))
         app.add_handler(CommandHandler("photo", self.cmd_photo))
