@@ -65,6 +65,14 @@ class TelegramControlHub:
         self.last_media_type = "video"
         self.last_caption = None
         self.daily_video_limit = 1
+        # Activity tracking
+        self.processing_status = "idle"       # idle | processing | done | error
+        self.processing_what = ""             # e.g. "Photo swap", "Video face swap"
+        self.processing_start = None          # datetime
+        self.last_posted_url = None           # last IG post URL
+        self.last_posted_type = None          # photo / video
+        self.last_posted_time = None          # datetime
+        self.last_error = None                # last error string
         db.init_db()
 
     def _is_admin(self, update: Update) -> bool:
@@ -188,6 +196,55 @@ class TelegramControlHub:
             "✅ *System online 24/7 & ready!*"
         )
         await update.message.reply_text(status_msg, parse_mode="Markdown")
+
+    async def cmd_activity(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Show live activity — what's processing, what was last posted."""
+        if not await self._check_or_prompt_admin(update): return
+
+        now = datetime.now()
+
+        # Processing status
+        if self.processing_status == "processing" and self.processing_start:
+            elapsed = (now - self.processing_start).seconds
+            proc_line = f"⏳ **PROCESSING:** `{self.processing_what}`\n   Elapsed: `{elapsed}s`"
+        elif self.processing_status == "done":
+            proc_line = f"✅ **Last Job Done:** `{self.processing_what}`"
+        elif self.processing_status == "error":
+            proc_line = f"❌ **Last Error:** `{self.last_error or 'Unknown'}`"
+        else:
+            proc_line = "💤 **Processing:** Idle — koi kaam nahi chal raha"
+
+        # Last post info
+        if self.last_posted_url:
+            t = self.last_posted_time.strftime('%H:%M:%S') if self.last_posted_time else "?"
+            icon = "📸" if self.last_posted_type == "photo" else "🎬"
+            post_line = (
+                f"{icon} **Last Posted:** `{self.last_posted_type.upper()}` at `{t}`\n"
+                f"   🔗 [View on Instagram]({self.last_posted_url})"
+            )
+        elif self.last_media_path:
+            fname = os.path.basename(self.last_media_path)
+            post_line = f"📁 **Last Media (not posted):** `{fname}`\n   👉 Press Post button to publish"
+        else:
+            post_line = "📭 **No media yet** — photo ya video bhejo!"
+
+        # Queue dir check
+        ref_dir = "output/reference_uploads"
+        pending = []
+        if os.path.exists(ref_dir):
+            pending = [f for f in os.listdir(ref_dir) if f.endswith(('.mp4', '.jpg', '.png'))]
+
+        msg = (
+            "🖥️ **LIVE ACTIVITY MONITOR**\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"{proc_line}\n\n"
+            f"{post_line}\n\n"
+            f"📂 **Reference uploads:** `{len(pending)}` files\n"
+            f"⏰ **Current time:** `{now.strftime('%H:%M:%S')}`\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "💡 _Tip: Photo bhejo → Face Swap → Post button dabao_"
+        )
+        await update.message.reply_text(msg, parse_mode="Markdown")
 
     async def cmd_video(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Generate high-accuracy reel with live progress timer."""
@@ -441,6 +498,9 @@ class TelegramControlHub:
 
         if query.data == "post_media":
             await query.edit_message_caption(caption="⏳ **Publishing to Instagram (@diyarai_016)...**")
+            self.processing_status = "processing"
+            self.processing_what = f"Posting {self.last_media_type} to Instagram"
+            self.processing_start = datetime.now()
             try:
                 ig_url = post_to_instagram(
                         video_path=self.last_media_path,
@@ -448,14 +508,24 @@ class TelegramControlHub:
                         media_type=self.last_media_type,
                     )
                 if ig_url:
+                    # Track success
+                    self.last_posted_url = ig_url
+                    self.last_posted_type = self.last_media_type
+                    self.last_posted_time = datetime.now()
+                    self.processing_status = "done"
+                    self.processing_what = f"{self.last_media_type} posted to Instagram"
                     await query.edit_message_caption(
                         caption=f"🎉 **PUBLISHED TO INSTAGRAM!**\n\n🔗 **Live Post:** {ig_url}\n\nMetrics will automatically sync to your Live Studio!"
                     )
                 else:
+                    self.processing_status = "done"
+                    self.processing_what = "Post submitted (no URL returned)"
                     await query.edit_message_caption(
                         caption="✅ **Post submitted to Instagram!** Check profile `@diyarai_016`."
                     )
             except Exception as e:
+                self.processing_status = "error"
+                self.last_error = str(e)[:100]
                 await query.edit_message_caption(caption=f"⚠️ **Instagram Post Notice:** {e}")
 
         elif query.data == "regen_caption":
@@ -694,6 +764,8 @@ class TelegramControlHub:
         app.add_handler(CommandHandler("verify", self.cmd_verify))
         app.add_handler(CommandHandler("auth", self.cmd_verify))
         app.add_handler(CommandHandler("status", self.cmd_status))
+        app.add_handler(CommandHandler("activity", self.cmd_activity))
+        app.add_handler(CommandHandler("log", self.cmd_activity))
         app.add_handler(CommandHandler("video", self.cmd_video))
         app.add_handler(CommandHandler("photo", self.cmd_photo))
         app.add_handler(CommandHandler("dms", self.cmd_dms))
