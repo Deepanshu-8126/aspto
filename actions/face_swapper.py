@@ -150,3 +150,98 @@ def get_diverse_diya_photo(prompt: str = "") -> str:
 
     # Random selection among high quality photos (ensuring diversity)
     return random.choice(all_photos)
+
+
+def swap_face_in_video(input_video_path: str, output_video_path: Optional[str] = None, progress_cb=None) -> Tuple[bool, str]:
+    """
+    Swaps Diya Rai's 200% exact face into any incoming target video.
+    Maintains original audio sync and temporal anti-flicker stability.
+    """
+    import subprocess
+    if not os.path.exists(input_video_path):
+        return False, f"Input video not found: {input_video_path}"
+
+    os.makedirs(os.path.join(PROJECT_ROOT, "output", "reference_transformed"), exist_ok=True)
+    if not output_video_path:
+        output_video_path = os.path.join(
+            PROJECT_ROOT, "output", "reference_transformed", f"diya_reel_{int(time.time())}.mp4"
+        )
+
+    temp_raw_video = os.path.join(
+        PROJECT_ROOT, "output", "reference_transformed", f"temp_silent_{int(time.time())}.mp4"
+    )
+
+    try:
+        face_app, swapper, master_face = get_face_engine()
+
+        cap = cv2.VideoCapture(input_video_path)
+        if not cap.isOpened():
+            return False, "Could not open video file."
+
+        fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out_writer = cv2.VideoWriter(temp_raw_video, fourcc, fps, (width, height))
+
+        prev_kps = None
+        prev_bbox = None
+        alpha = 0.75
+        frame_idx = 0
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret: break
+            frame_idx += 1
+
+            faces = face_app.get(frame)
+            if faces:
+                tf = max(faces, key=lambda f: f.det_score)
+                if prev_kps is not None and prev_bbox is not None:
+                    tf.kps = alpha * tf.kps + (1.0 - alpha) * prev_kps
+                    tf.bbox = alpha * tf.bbox + (1.0 - alpha) * prev_bbox
+                prev_kps = tf.kps.copy()
+                prev_bbox = tf.bbox.copy()
+
+                swapped = swapper.get(frame, tf, master_face, paste_back=True)
+                out_writer.write(swapped)
+            else:
+                out_writer.write(frame)
+
+            if progress_cb and total_frames > 0 and frame_idx % max(1, int(total_frames / 5)) == 0:
+                pct = int((frame_idx / total_frames) * 100)
+                progress_cb(pct)
+
+        cap.release()
+        out_writer.release()
+
+        # Mux original audio from input_video_path using FFmpeg
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", temp_raw_video,
+            "-i", input_video_path,
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            "-c:a", "aac",
+            "-b:a", "192k",
+            "-map", "0:v:0",
+            "-map", "1:a:0?",
+            "-shortest",
+            output_video_path
+        ]
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
+
+        if os.path.exists(temp_raw_video):
+            os.remove(temp_raw_video)
+
+        return True, output_video_path
+
+    except Exception as e:
+        logger.error(f"Video face swap error: {e}", exc_info=True)
+        if os.path.exists(temp_raw_video):
+            try: os.remove(temp_raw_video)
+            except Exception: pass
+        return False, str(e)
+

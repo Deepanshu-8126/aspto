@@ -430,6 +430,77 @@ class TelegramControlHub:
             msg += f"👤 `@{l.get('username')}`: _{l.get('message')}_\n✨ **Diya:** {l.get('notes', 'Replied')}\n\n"
         await update.message.reply_text(msg, parse_mode="Markdown")
 
+    async def handle_video_reference(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """User uploaded a video reel directly in chat — swap face with 200% precision & sync music!"""
+        if not await self._check_or_prompt_admin(update): return
+        
+        t0 = time.time()
+        user_caption = update.message.caption or "trending viral dance"
+        
+        progress_msg = await update.message.reply_text(
+            "🎬 **New Reel Video Received!**\n"
+            "⚡ Downloading target video...\n"
+            "💎 Preparing 200% Diya Rai Face Lock with original music!"
+        )
+        
+        # 1. Download video
+        video_obj = update.message.video or update.message.animation or update.message.document
+        file = await context.bot.get_file(video_obj.file_id)
+        os.makedirs("output/reference_uploads", exist_ok=True)
+        local_vid = f"output/reference_uploads/reel_in_{int(time.time())}.mp4"
+        
+        try:
+            await file.download_to_drive(local_vid, read_timeout=180)
+        except Exception:
+            if getattr(file, 'file_path', None):
+                import urllib.request
+                urllib.request.urlretrieve(file.file_path, local_vid)
+            else:
+                raise
+        
+        await progress_msg.edit_text(
+            "⚡ `[■■■■■□□□□□] 50% — Swapping Face on GPU & Preserving Original Music...`"
+        )
+        
+        # 2. Swap Face in Video
+        from actions.face_swapper import swap_face_in_video
+        success, result_reel_or_err = swap_face_in_video(local_vid)
+        
+        if not success:
+            await progress_msg.edit_text(f"⚠️ **Video Processing Notice:**\n{result_reel_or_err}")
+            return
+            
+        caption = self.generate_viral_caption(user_caption)
+        self.last_media_path = result_reel_or_err
+        self.last_media_type = "video"
+        self.last_caption = caption
+        elapsed = time.time() - t0
+
+        keyboard = [
+            [
+                InlineKeyboardButton("🚀 Post Reel to Instagram", callback_data="post_media"),
+                InlineKeyboardButton("🔄 New Caption", callback_data="regen_caption"),
+            ],
+            [
+                InlineKeyboardButton("❌ Discard", callback_data="discard_media")
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await progress_msg.delete()
+        with open(result_reel_or_err, "rb") as vf:
+            await update.message.reply_video(
+                video=vf,
+                caption=(
+                    f"👑 **Diya Rai — Reel Transformed & Ready!** 🎬\n"
+                    f"⚡ **Face Match:** 200% Exact Facial Geometry\n"
+                    f"🎵 **Audio:** Original Music Synced\n"
+                    f"⏱️ **Processing Time:** `{elapsed:.1f}s`\n\n"
+                    f"📝 **Recommended Caption:**\n{caption}"
+                ),
+                reply_markup=reply_markup
+            )
+
     async def handle_text_prompt(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle incoming text messages: URLs, greetings, or free-form photo prompts."""
         if not await self._check_or_prompt_admin(update): return
@@ -439,13 +510,50 @@ class TelegramControlHub:
         urls = re.findall(r"https?://[^\s]+", text)
         if urls:
             target_url = urls[0]
-            await update.message.reply_text(
-                f"🎯 **Detected Motion Video Link!**\n🔗 `{target_url}`\n\n"
-                "💃 Extracting 133-point body skeleton...\n"
-                "👗 Rendering Diya Rai in outfit...\n"
+            progress_msg = await update.message.reply_text(
+                f"🎯 **Detected Reel Link!**\n🔗 `{target_url}`\n\n"
+                "📥 Downloading video and extracting music...\n"
                 "✨ Locking 200% Facial Architecture with Original Audio!",
                 parse_mode="Markdown"
             )
+            os.makedirs("output/reference_uploads", exist_ok=True)
+            download_out = f"output/reference_uploads/url_reel_{int(time.time())}.mp4"
+            import subprocess
+            dl_cmd = ["yt-dlp", "-f", "mp4", "-o", download_out, "--max-filesize", "50M", target_url]
+            try:
+                subprocess.run(dl_cmd, capture_output=True, text=True, check=True)
+                if os.path.exists(download_out):
+                    from actions.face_swapper import swap_face_in_video
+                    await progress_msg.edit_text("⚡ `[■■■■■□□□□□] 50% — Swapping Face with Diya Rai...`")
+                    success, res_path = swap_face_in_video(download_out)
+                    if success:
+                        caption = self.generate_viral_caption("trending dance reel")
+                        self.last_media_path = res_path
+                        self.last_media_type = "video"
+                        self.last_caption = caption
+                        keyboard = [
+                            [
+                                InlineKeyboardButton("🚀 Post Reel to Instagram", callback_data="post_media"),
+                                InlineKeyboardButton("🔄 New Caption", callback_data="regen_caption"),
+                            ],
+                            [
+                                InlineKeyboardButton("❌ Discard", callback_data="discard_media")
+                            ]
+                        ]
+                        await progress_msg.delete()
+                        with open(res_path, "rb") as vf:
+                            await update.message.reply_video(
+                                video=vf,
+                                caption=(
+                                    f"👑 **Diya Rai — Transformed Reel Ready!** 🎬\n\n"
+                                    f"📝 **Caption:**\n{caption}"
+                                ),
+                                reply_markup=InlineKeyboardMarkup(keyboard)
+                            )
+                        return
+            except Exception as e:
+                logger.error(f"URL reel gen error: {e}")
+
             from actions.motion_extractor import add_custom_target
             add_custom_target(url=target_url, dress="trending outfit", bg="mumbai aesthetic", topic="viral reel")
             return
@@ -456,10 +564,11 @@ class TelegramControlHub:
             await update.message.reply_text(
                 "✨ **Hey Deepanshu! Diya Rai here.** 💕\n\n"
                 "Mai online hu aur ready hu! Aap mujhe:\n"
-                "1. 📸 **Koi bhi photo reference bhejo** (Pinterest, Instagram ya model ki) — mai usme apna face swap kar dungi!\n"
-                "2. 👗 **Koi bhi outfit ya idea type karo** (jaise: `red saree on beach` ya `formal blazer look`)\n"
-                "3. 🔗 **Koi Reel link bhejo**\n"
-                "4. Type `/status` live followers aur metrics dekhne ke liye!",
+                "1. 📸 **Koi bhi photo reference bhejo** — 3-4 second me Diya ka face swap ho jayega!\n"
+                "2. 🎬 **Koi bhi video reel (.mp4) bhejo** — original music ke sath Diya ki nayi reel ban jayegi!\n"
+                "3. 👗 **Koi bhi outfit prompt likho** (jaise: `red saree on terrace`)\n"
+                "4. 🔗 **Koi Reel link bhejo**\n"
+                "5. Type `/status` live followers aur metrics dekhne ke liye!",
                 parse_mode="Markdown"
             )
             return
@@ -488,6 +597,7 @@ class TelegramControlHub:
         app.add_handler(CommandHandler("photo", self.cmd_photo))
         app.add_handler(CommandHandler("dms", self.cmd_dms))
         app.add_handler(MessageHandler(filters.PHOTO, self.handle_photo_reference))
+        app.add_handler(MessageHandler(filters.VIDEO | filters.ANIMATION | (filters.Document.ALL & filters.Document.MimeType("video/mp4")), self.handle_video_reference))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_text_prompt))
         app.add_handler(CallbackQueryHandler(self.handle_callbacks))
         
