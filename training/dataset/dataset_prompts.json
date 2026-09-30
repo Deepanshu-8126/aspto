@@ -1,0 +1,162 @@
+{
+  "character": "Diya Rai",
+  "target_count": 20,
+  "breakdown": {
+    "close_ups": 10,
+    "mid_body": 6,
+    "full_body": 4
+  },
+  "purpose": "Kohya_ss SD1.5 / SDXL Face LoRA Training + FaceFusion Anchor",
+  "prompts": [
+    {
+      "id": "01_front_smiling",
+      "category": "close_up",
+      "angle": "front",
+      "expression": "warm confident smile showing teeth",
+      "lighting": "bright morning golden sunlight",
+      "prompt": "ultra-photorealistic close-up portrait of 24yo Indian woman Diya Rai, front view direct eye contact, warm confident smile showing teeth, long dark brown wavy hair, subtle left cheek dimple, DSLR 85mm f/1.4, flawless natural skin texture"
+    },
+    {
+      "id": "02_front_neutral",
+      "category": "close_up",
+      "angle": "front",
+      "expression": "calm neutral editorial expression",
+      "lighting": "soft studio vanity diffused lighting",
+      "prompt": "ultra-photorealistic close-up portrait of 24yo Indian woman Diya Rai, front view, calm neutral high-fashion gaze, detailed brown eyes, caramel highlights in hair, professional beauty photography, 8k uhd"
+    },
+    {
+      "id": "03_three_quarter_left",
+      "category": "close_up",
+      "angle": "3/4 left",
+      "expression": "friendly subtle smile",
+      "lighting": "natural window backlight with bokeh",
+      "prompt": "ultra-photorealistic 3/4 angle portrait of 24yo Indian woman Diya Rai, turning head slightly to the left, friendly subtle smile, sharp jawline, hair cascading over right shoulder, shallow depth of field"
+    },
+    {
+      "id": "04_three_quarter_right",
+      "category": "close_up",
+      "angle": "3/4 right",
+      "expression": "candid thoughtful expression",
+      "lighting": "afternoon warm cafe terrace sun",
+      "prompt": "ultra-photorealistic 3/4 angle portrait of 24yo Indian woman Diya Rai, angled to the right, candid thoughtful look, sun-kissed golden skin, individual hair strands, 85mm portrait lens"
+    },
+    {
+      "id": "05_side_profile_left",
+      "category": "close_up",
+      "angle": "profile 90-degree",
+      "expression": "relaxed serene",
+      "lighting": "dramatic rim lighting",
+      "prompt": "ultra-photorealistic side profile portrait of 24yo Indian woman Diya Rai, 90-degree clean side view, distinct jawline, elegant neck, wavy hair texture, delicate ear piercing, cinematic lighting"
+    },
+    {
+      "id": "06_looking_away",
+      "category": "close_up",
+      "angle": "looking off-camera",
+      "expression": "joyful laughter",
+      "lighting": "golden hour sunset glow",
+      "prompt": "ultra-photorealistic candid close-up of 24yo Indian woman Diya Rai laughing genuinely, head tilted, looking off-camera towards sunset, natural joyful eyes, golden hour rim light"
+    },
+    {
+      "id": "07_serious_glam",
+      "category": "close_up",
+      "angle": "slight low angle",
+      "expression": "intense glamorous gaze",
+      "lighting": "luxury evening club mood lighting",
+      "prompt": "ultra-photorealistic beauty headshot of 24yo Indian woman Diya Rai, slight low angle, luxury evening makeup, nude lipstick, smoky eye definition, intense gaze, cinematic 8k"
+    },
+    {
+      "id": "08_headband_fitness",
+      "category": "close_up",
+      "angle": "front eye-level",
+      "expression": "energetic determined",
+      "lighting": "bright modern gym neon ambient",
+      "prompt": "ultra-photorealistic close-up face of 24yo Indian woman Diya Rai, gym activewear, subtle workout glow, energetic determined look, high ponytail, crisp clean focus"
+    },
+    {
+      "id": "09_soft_morning",
+      "category": "close_up",
+      "angle": "top-down 45-degree",
+      "expression": "peaceful waking up smile",
+      "lighting": "soft cozy bedroom morning light",
+      "prompt": "ultra-photorealistic close-up of 24yo Indian woman Diya Rai, soft cozy morning vibes, natural no-makeup look, smiling gently, messy wavy morning hair, warm white aesthetic"
+    },
+    {
+      "id": "10_golden_hour_direct",
+      "category": "close_up",
+      "angle": "front direct",
+      "expression": "mesmerizing direct gaze",
+      "lighting": "intense marine drive sunset rays",
+      "prompt": "ultra-photorealistic close-up portrait of 24yo Indian woman Diya Rai at Marine Drive Mumbai, sunset rays hitting face, glowing warm skin, wind blowing hair strands across cheek, 8k master quality"
+    },
+    {
+      "id": "11_mid_blazer_office",
+      "category": "mid_body",
+      "outfit": "beige smart blazer with white silk top",
+      "setting": "modern corporate high-rise Mumbai balcony",
+      "prompt": "ultra-photorealistic upper-body shot of 24yo Indian woman Diya Rai, wearing fitted beige blazer over white silk top, holding black coffee cup, standing at modern glass balcony, professional lifestyle influencer, 50mm f/1.8"
+    },
+    {
+      "id": "12_mid_cafe_dress",
+      "category": "mid_body",
+      "outfit": "floral pastel wrap dress",
+      "setting": "aesthetic outdoor Bandra cafe table",
+      "prompt": "ultra-photorealistic medium shot of 24yo Indian woman Diya Rai seated at wooden cafe table with iced latte, wearing floral pastel wrap dress, natural relaxed posture, sunny day, vibrant cafe plants background"
+    },
+    {
+      "id": "13_mid_gym_athletic",
+      "category": "mid_body",
+      "outfit": "mauve sports bra and high-waist gym tights",
+      "setting": "fitness studio gym equipment",
+      "prompt": "ultra-photorealistic mid-body fitness portrait of 24yo Indian woman Diya Rai in mauve sports activewear, holding shaker bottle, toned waist, athletic posture, gym dumbbells background with soft neon lighting"
+    },
+    {
+      "id": "14_mid_evening_cocktail",
+      "category": "mid_body",
+      "outfit": "emerald satin slip dress",
+      "setting": "rooftop restaurant city skyline",
+      "prompt": "ultra-photorealistic medium portrait of 24yo Indian woman Diya Rai in emerald green satin slip dress, gold necklace, holding mocktail glass at luxury rooftop bar, Mumbai night skyline bokeh"
+    },
+    {
+      "id": "15_mid_casual_street",
+      "category": "mid_body",
+      "outfit": "oversized white linen shirt with denim jeans",
+      "setting": "Colaba Mumbai street art sidewalk",
+      "prompt": "ultra-photorealistic waist-up street style photo of 24yo Indian woman Diya Rai, oversized white linen shirt tucked in denim, sunglasses on head, walking candidly on Mumbai street, dynamic depth"
+    },
+    {
+      "id": "16_mid_traditional_festive",
+      "category": "mid_body",
+      "outfit": "contemporary pastel pink chikankari kurta",
+      "setting": "festive home balcony with fairy lights",
+      "prompt": "ultra-photorealistic medium shot of 24yo Indian woman Diya Rai in elegant pastel pink chikankari kurta, delicate jhumkas, warm diwali fairy lights background, graceful festive aura"
+    },
+    {
+      "id": "17_full_street_walk",
+      "category": "full_body",
+      "outfit": "smart-casual trousers and fitted crop blazer",
+      "setting": "clean urban pedestrian crossing",
+      "prompt": "ultra-photorealistic full-length fashion shot of 24yo Indian woman Diya Rai, 5'6\" slim athletic build, walking across city street with leather handbag, full body head to toe, sharp street fashion editorial"
+    },
+    {
+      "id": "18_full_beach_dress",
+      "category": "full_body",
+      "outfit": "flowing yellow summer sundress",
+      "setting": "Juhu beach shoreline at sunset",
+      "prompt": "ultra-photorealistic full-body shot of 24yo Indian woman Diya Rai, standing near water edge on sandy beach, flowing yellow sundress caught in wind, bare feet in sand, golden sunset horizon, full frame 35mm"
+    },
+    {
+      "id": "19_full_gym_posture",
+      "category": "full_body",
+      "outfit": "charcoal grey workout set and white sneakers",
+      "setting": "aerobic studio wooden floor",
+      "prompt": "ultra-photorealistic full-body athletic stance of 24yo Indian woman Diya Rai in charcoal seamless workout set, white sneakers, confident fitness influencer posture, mirrors and gym lighting"
+    },
+    {
+      "id": "20_full_red_carpet",
+      "category": "full_body",
+      "outfit": "floor-length ruby red slit evening gown",
+      "setting": "grand hotel marble staircase",
+      "prompt": "ultra-photorealistic full-length evening glamour shot of 24yo Indian woman Diya Rai, floor-length ruby red gown with high slit and strappy heels, standing on grand marble steps, luxury gala event lighting"
+    }
+  ]
+}

@@ -323,8 +323,8 @@ class TestAishaCharacterStudio(unittest.TestCase):
         from actions.character_studio import AishaCharacterStudio
         studio = AishaCharacterStudio()
         profile = studio.get_profile()
-        self.assertEqual(profile["name"], "Aisha Verma")
-        self.assertEqual(profile["age"], 24)
+        self.assertEqual(profile["name"], "Diya Rai")
+        self.assertEqual(profile["age"], 23)
         self.assertIn("smiling", profile["angles"])
         self.assertIn("front_face", profile["angles"])
 
@@ -337,7 +337,7 @@ class TestAishaCharacterStudio(unittest.TestCase):
     def test_export_open_generative_ai_json(self):
         from actions.character_studio import AishaCharacterStudio
         studio = AishaCharacterStudio()
-        out_json = "data/test_aisha_open_gen.json"
+        out_json = "data/test_diya_open_gen.json"
         res_path = studio.export_open_generative_ai_format(output_path=out_json)
         self.assertTrue(os.path.exists(res_path))
 
@@ -346,7 +346,7 @@ class TestAishaCharacterStudio(unittest.TestCase):
             data = json.load(f)
         self.assertEqual(data["app"], "Open-Generative-AI")
         self.assertEqual(data["studio_tab"], "AI Influencer Studio")
-        self.assertEqual(data["character"]["name"], "Aisha Verma")
+        self.assertEqual(data["character"]["name"], "Diya Rai")
         self.assertIn("promptModifier", data["character"])
 
 

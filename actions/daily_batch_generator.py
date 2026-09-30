@@ -1,8 +1,8 @@
 """
 AI-INFLUENCER-OS — 5 Posts/Day Automated Batch Generator
-Orchestrates Aisha's daily lifecycle content pipeline (08:00, 12:00, 16:00, 20:00, 22:00).
+Orchestrates Diya Rai's daily lifecycle content pipeline (08:00, 12:00, 16:00, 20:00, 22:00).
 Integrates:
-- Aisha Character Studio (multi-angle face consistency)
+- Diya Rai Character Studio (multi-angle face consistency)
 - Qwen3-TTS (emotional voice cloning)
 - Wan2.2 MoE (photorealistic 9:16 video generation)
 - Local SQLite Database (pipeline & scheduling tracking)
@@ -31,7 +31,7 @@ DAILY_SCHEDULE_SLOTS = [
         "preferred_angle": "smiling",
         "theme": "Career & Daily Motivation",
         "scene_prompt": (
-            "Aisha in smart casual beige blazer and white silk top, holding black coffee cup, "
+            "Diya Rai in smart casual beige blazer and white silk top, holding black coffee cup, "
             "modern Mumbai high-rise office balcony, bright warm morning sunlight, confident radiant smile, "
             "photorealistic 8k, vertical 9:16"
         ),
@@ -41,7 +41,7 @@ DAILY_SCHEDULE_SLOTS = [
         ),
         "emotion": "happy",
         "post_type": "reel",
-        "hashtags": ["#AishaVerma", "#MorningVibes", "#OOTD", "#CareerTips", "#MumbaiInfluencer", "#DailyMotivation"],
+        "hashtags": ["#Diya RaiVerma", "#MorningVibes", "#OOTD", "#CareerTips", "#MumbaiInfluencer", "#DailyMotivation"],
     },
     {
         "slot_id": "slot_2_lunch",
@@ -50,7 +50,7 @@ DAILY_SCHEDULE_SLOTS = [
         "preferred_angle": "three_quarter",
         "theme": "Mumbai Lifestyle & Food",
         "scene_prompt": (
-            "Aisha in pastel floral summer dress, outdoor seating at aesthetic Bandra cafe, "
+            "Diya Rai in pastel floral summer dress, outdoor seating at aesthetic Bandra cafe, "
             "holding traditional cutting chai glass, soft natural sunlight, relaxed friendly vibe, "
             "photorealistic 8k, vertical 9:16"
         ),
@@ -60,7 +60,7 @@ DAILY_SCHEDULE_SLOTS = [
         ),
         "emotion": "chill",
         "post_type": "reel",
-        "hashtags": ["#MumbaiCafe", "#ChaiLover", "#LifestyleBlogger", "#MidDayVibes", "#BandraDiaries", "#AishaDiaries"],
+        "hashtags": ["#MumbaiCafe", "#ChaiLover", "#LifestyleBlogger", "#MidDayVibes", "#BandraDiaries", "#Diya RaiDiaries"],
     },
     {
         "slot_id": "slot_3_fitness",
@@ -69,7 +69,7 @@ DAILY_SCHEDULE_SLOTS = [
         "preferred_angle": "front_face",
         "theme": "Fitness & Core Routine",
         "scene_prompt": (
-            "Aisha in sleek mauve gym activewear, holding water bottle, aesthetic fitness studio "
+            "Diya Rai in sleek mauve gym activewear, holding water bottle, aesthetic fitness studio "
             "with ambient neon rim light, fit athletic physique, determined energetic expression, "
             "photorealistic 8k, vertical 9:16"
         ),
@@ -79,7 +79,7 @@ DAILY_SCHEDULE_SLOTS = [
         ),
         "emotion": "excited",
         "post_type": "reel",
-        "hashtags": ["#FitnessMotivation", "#WorkoutRoutine", "#FlatTummyTips", "#HealthyLiving", "#AishaFit"],
+        "hashtags": ["#FitnessMotivation", "#WorkoutRoutine", "#FlatTummyTips", "#HealthyLiving", "#Diya RaiFit"],
     },
     {
         "slot_id": "slot_4_evening",
@@ -88,7 +88,7 @@ DAILY_SCHEDULE_SLOTS = [
         "preferred_angle": "serious",
         "theme": "Fashion Inspo & Evening Glam",
         "scene_prompt": (
-            "Aisha in emerald satin evening dress, luxury Mumbai rooftop restaurant overlooking "
+            "Diya Rai in emerald satin evening dress, luxury Mumbai rooftop restaurant overlooking "
             "city lights at golden hour dusk, elegant posture, high-fashion editorial look, "
             "photorealistic 8k, vertical 9:16"
         ),
@@ -107,7 +107,7 @@ DAILY_SCHEDULE_SLOTS = [
         "preferred_angle": "looking_away",
         "theme": "Self-care & Night Story",
         "scene_prompt": (
-            "Aisha in cozy cream silk loungewear at home, soft warm fairy lights, serene peaceful expression, "
+            "Diya Rai in cozy cream silk loungewear at home, soft warm fairy lights, serene peaceful expression, "
             "candid look towards window, peaceful evening aesthetic, photorealistic 8k, vertical 9:16"
         ),
         "voice_script": (
@@ -116,14 +116,14 @@ DAILY_SCHEDULE_SLOTS = [
         ),
         "emotion": "whisper",
         "post_type": "story",
-        "hashtags": ["#NightRoutine", "#GoodNightFam", "#SelfCare", "#PeacefulMindset", "#AishaDiaries"],
+        "hashtags": ["#NightRoutine", "#GoodNightFam", "#SelfCare", "#PeacefulMindset", "#Diya RaiDiaries"],
     },
 ]
 
 
 class DailyBatchGenerator:
     """
-    Automated generation and batch orchestration of Aisha's 5 daily scheduled posts.
+    Automated generation and batch orchestration of Diya Rai's 5 daily scheduled posts.
     """
 
     def __init__(self):
@@ -232,11 +232,11 @@ class DailyBatchGenerator:
         force_angle: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Executes full daily batch: generates all 5 scheduled posts for Aisha.
+        Executes full daily batch: generates all 5 scheduled posts for Diya Rai.
         """
         today = date_str or datetime.now().strftime("%Y-%m-%d")
         results = []
-        logger.info(f"🚀 Starting Aisha 5-Post Daily Batch for date: {today}")
+        logger.info(f"🚀 Starting Diya Rai 5-Post Daily Batch for date: {today}")
 
         for idx, _ in enumerate(DAILY_SCHEDULE_SLOTS):
             slot_res = self.generate_slot(idx, date_str=today, force_angle=force_angle)
@@ -245,7 +245,7 @@ class DailyBatchGenerator:
         summary_file = self.output_dir / f"batch_{today}.json"
         batch_summary = {
             "batch_date": today,
-            "character": "Aisha Verma",
+            "character": "Diya Rai",
             "total_posts": len(results),
             "generated_at": datetime.now().isoformat(),
             "posts": results,
@@ -269,7 +269,7 @@ class DailyBatchGenerator:
             "format": "Open-Generative-AI Workflow Schedule",
             "version": "1.0.9",
             "character_id": "aisha_mumbai_01",
-            "name": "Aisha Verma",
+            "name": "Diya Rai",
             "slots": [
                 {
                     "time": s["time"],

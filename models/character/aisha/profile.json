@@ -1,16 +1,16 @@
 {
-  "character_id": "aisha_mumbai_01",
-  "name": "Aisha Verma",
-  "age": 24,
+  "character_id": "diya_rai_01",
+  "name": "Diya Rai",
+  "age": 23,
   "location": "Mumbai, India",
   "appearance": {
-    "skin_tone": "Fair to medium Indian warm golden undertone",
-    "hair": "Long dark brown wavy hair with caramel highlights",
-    "eyes": "Large expressive deep brown eyes",
+    "skin_tone": "Warm golden Indian radiant undertone",
+    "hair": "Long glossy dark brown wavy hair with subtle highlights",
+    "eyes": "Expressive captivating almond deep brown eyes",
     "body": "Slim athletic, 5'6\" height",
-    "distinctive_features": "Subtle dimple on left cheek when smiling, elegant jawline"
+    "distinctive_features": "Charming smile, elegant collarbone, sharp defined jawline"
   },
-  "style_vibe": "Casual chic Mumbai lifestyle + luxury evening glam",
+  "style_vibe": "Chic Mumbai street fashion + luxury evening glam",
   "active_reference_angle": "smiling",
   "angles": {
     "front_face": "Frontal portrait, direct eye contact with camera, neutral chic look",
