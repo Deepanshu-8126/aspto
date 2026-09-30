@@ -442,7 +442,11 @@ class TelegramControlHub:
         if query.data == "post_media":
             await query.edit_message_caption(caption="⏳ **Publishing to Instagram (@diyarai_016)...**")
             try:
-                ig_url = post_to_instagram(video_path=self.last_media_path, caption=self.last_caption)
+                ig_url = post_to_instagram(
+                        video_path=self.last_media_path,
+                        caption=self.last_caption,
+                        media_type=self.last_media_type,
+                    )
                 if ig_url:
                     await query.edit_message_caption(
                         caption=f"🎉 **PUBLISHED TO INSTAGRAM!**\n\n🔗 **Live Post:** {ig_url}\n\nMetrics will automatically sync to your Live Studio!"
