@@ -9,12 +9,13 @@ import logging
 import asyncio
 from functools import wraps
 
-from telegram import Update, BotCommand
+from telegram import Update, BotCommand, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
     CommandHandler,
     ContextTypes,
     MessageHandler,
+    CallbackQueryHandler,
     filters,
 )
 
@@ -87,6 +88,15 @@ class TelegramBot:
 
         for cmd, handler in handlers.items():
             self.app.add_handler(CommandHandler(cmd, self._admin_only(handler)))
+
+        # Register photo handler (for Pinterest / Instagram aesthetic photos)
+        self.app.add_handler(MessageHandler(filters.PHOTO, self._admin_only(self._handle_photo)))
+
+        # Register text / URL handler (auto-detects links sent by admin)
+        self.app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), self._admin_only(self._handle_text_url)))
+
+        # Register interactive inline button callbacks
+        self.app.add_handler(CallbackQueryHandler(self._handle_callback))
 
         # Post-init hook for command menu
         self.app.post_init = self._setup_commands
@@ -391,3 +401,133 @@ class TelegramBot:
         """Send a notification to the admin."""
         if self.app and self.app.bot:
             await self.app.bot.send_message(self.admin_chat_id, message, parse_mode="Markdown")
+
+    async def _handle_photo(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """
+        Receives aesthetic photos from Pinterest / Instagram sent by user.
+        Applies Diya Rai face via FaceFusion and returns instant preview with [APPROVE & POST] button!
+        """
+        chat_id = update.effective_chat.id
+        photo = update.message.photo[-1]
+        user_caption = update.message.caption or "trending aesthetic look"
+
+        status_msg = await update.message.reply_text(
+            "📥 **Received Pinterest / Aesthetic Photo!**\n\n"
+            "🔍 Extracting pose & lighting...\n"
+            "👩 Applying Diya Rai's face...\n"
+            "✍️ Writing viral caption & hashtags...",
+            parse_mode="Markdown",
+        )
+
+        inbox_dir = "output/inbox"
+        os.makedirs(inbox_dir, exist_ok=True)
+        photo_file = await photo.get_file()
+        input_path = os.path.join(inbox_dir, f"inbox_{photo.file_id[:8]}.jpg")
+        await photo_file.download_to_drive(input_path)
+
+        output_path = os.path.join("output", f"diya_post_{photo.file_id[:8]}.jpg")
+
+        try:
+            from actions.face_engine import FaceFusionEngine
+            from actions.character_studio import character_studio
+            from actions.generate_script import generate_script_and_caption
+
+            diya_face = character_studio.get_active_reference_image()
+            ff = FaceFusionEngine()
+            ff.swap_face(source_face=diya_face, target_image=input_path, output_path=output_path)
+
+            copy = generate_script_and_caption(topic=user_caption, dress="chic outfit")
+            post_caption = f"{copy.get('caption', user_caption)}\n\n{' '.join(copy.get('hashtags', []))}"
+
+            post_id = self.db.create_post(
+                topic=f"Pinterest Pose: {user_caption}",
+                script=user_caption,
+                caption=post_caption,
+                hashtags=json.dumps(copy.get("hashtags", [])),
+                video_path=output_path,
+                platform="instagram",
+                post_type="photo",
+            )
+            self.db.update_post(post_id, status="generated")
+
+            keyboard = InlineKeyboardMarkup([
+                [
+                    InlineKeyboardButton("🚀 Post to Instagram", callback_data=f"post_{post_id}"),
+                    InlineKeyboardButton("❌ Discard", callback_data=f"discard_{post_id}"),
+                ]
+            ])
+
+            with open(output_path, "rb") as f:
+                await context.bot.send_photo(
+                    chat_id=chat_id,
+                    photo=f,
+                    caption=f"✨ **Diya Rai Post Ready!**\n\n{post_caption}",
+                    reply_markup=keyboard,
+                )
+            await status_msg.delete()
+
+        except Exception as e:
+            logger.error(f"Error processing aesthetic photo: {e}")
+            await status_msg.edit_text(f"⚠️ Photo processing note: {e}")
+
+    async def _handle_text_url(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """
+        Auto-detects when the user sends a video or post URL (Instagram Reel, Shorts, Pinterest).
+        Triggers motion transfer with Diya Rai's face and sends review button.
+        """
+        text = update.message.text or ""
+        import re
+        urls = re.findall(r"https?://[^\s]+", text)
+        if not urls:
+            return
+
+        target_url = urls[0]
+        chat_id = update.effective_chat.id
+
+        await update.message.reply_text(
+            f"🎯 **Detected Motion Video Link!**\n🔗 `{target_url}`\n\n"
+            "💃 Extracting 133-point body skeleton...\n"
+            "👗 Rendering Diya Rai in outfit...\n"
+            "✨ Will send you 4K Reel preview here when ready!",
+            parse_mode="Markdown",
+        )
+
+        from actions.motion_extractor import add_custom_target
+        add_custom_target(url=target_url, dress="trending outfit", bg="mumbai aesthetic", topic="viral reel")
+
+    async def _handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handles interactive inline button clicks [Post to Instagram] / [Discard]."""
+        query = update.callback_query
+        await query.answer()
+
+        data = query.data or ""
+        if data.startswith("post_"):
+            post_id = int(data.split("_")[1])
+            post = self.db.get_post(post_id)
+            if post:
+                media_path = post.get("video_path")
+                caption = post.get("caption", "✨")
+                hashtags = json.loads(post.get("hashtags", "[]"))
+
+                await query.edit_message_caption("📤 **Publishing directly to Instagram...**", parse_mode="Markdown")
+
+                # Publish video reel or photo
+                if media_path and media_path.endswith((".mp4", ".mov")):
+                    ig_url = self.instagram.post_reel(media_path, caption=caption, hashtags=hashtags)
+                else:
+                    ig_url = self.instagram.post_photo(media_path, caption=caption)
+
+                if ig_url:
+                    self.db.update_post(post_id, ig_url=ig_url, status="posted")
+                    await query.edit_message_caption(
+                        f"✅ **Published to Instagram!**\n\n🔗 [View on Instagram]({ig_url})",
+                        parse_mode="Markdown",
+                    )
+                else:
+                    await query.edit_message_caption("⚠️ Instagram credentials not set yet in `config/config.yaml`.", parse_mode="Markdown")
+
+        elif data.startswith("discard_"):
+            post_id = int(data.split("_")[1])
+            self.db.update_post(post_id, status="discarded")
+            await query.edit_message_caption("🗑️ **Post discarded.**", parse_mode="Markdown")
+
