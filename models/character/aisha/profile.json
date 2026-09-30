@@ -1,0 +1,29 @@
+{
+  "character_id": "aisha_mumbai_01",
+  "name": "Aisha Verma",
+  "age": 24,
+  "location": "Mumbai, India",
+  "appearance": {
+    "skin_tone": "Fair to medium Indian warm golden undertone",
+    "hair": "Long dark brown wavy hair with caramel highlights",
+    "eyes": "Large expressive deep brown eyes",
+    "body": "Slim athletic, 5'6\" height",
+    "distinctive_features": "Subtle dimple on left cheek when smiling, elegant jawline"
+  },
+  "style_vibe": "Casual chic Mumbai lifestyle + luxury evening glam",
+  "active_reference_angle": "smiling",
+  "angles": {
+    "front_face": "Frontal portrait, direct eye contact with camera, neutral chic look",
+    "side_profile": "90-degree side profile, showing jawline and wavy hair texture",
+    "three_quarter": "3/4 angle portrait, dynamic three-quarter view, natural posture",
+    "smiling": "Warm confident smile showing teeth, joyful influencer energy",
+    "serious": "High-fashion editorial high-glam serious gaze",
+    "looking_away": "Candid side look, looking off-camera towards sunset golden hour"
+  },
+  "voice_profile": {
+    "engine": "qwen3_tts",
+    "emotion": "happy",
+    "language": "hi-en (Hinglish)",
+    "sample_rate": 48000
+  }
+}

@@ -27,6 +27,8 @@ from local import database as db
 from local.cloud_client import CloudClient
 from actions.motion_extractor import add_custom_target
 from cloud.image_gen import generate_avatar
+from actions.character_studio import character_studio
+from actions.daily_batch_generator import daily_batch_generator, DAILY_SCHEDULE_SLOTS
 
 logger = logging.getLogger("dashboard")
 
@@ -201,6 +203,68 @@ def test_face_preview(dress_prompt: str, bg_prompt: str):
         return f"Preview note: {e}", None
 
 
+# ── Aisha Character Studio & 5-Posts Batch Automation Handlers ──
+
+def handle_change_angle(angle_name: str) -> Tuple[str, str]:
+    """Updates active reference face angle and returns current image path."""
+    msg = character_studio.set_active_angle(angle_name)
+    img_path = character_studio.get_active_reference_image()
+    return msg, img_path
+
+
+def handle_export_open_gen() -> str:
+    """Exports character profile and daily batch schedule to Open-Generative-AI format."""
+    path1 = character_studio.export_open_generative_ai_format()
+    path2 = daily_batch_generator.export_open_generative_ai_batch()
+    return (
+        f"✅ Exported to Open-Generative-AI Format!\n\n"
+        f"• Character Profile: {path1}\n"
+        f"• 5-Slot Batch Workflow: {path2}\n\n"
+        f"Import directly into Open-Generative-AI Desktop App ('AI Influencer Studio' tab) or automate locally."
+    )
+
+
+def handle_generate_5_posts(angle: str) -> str:
+    """Generates all 5 daily lifecycle posts."""
+    force = None if angle == "Auto (Slot-Based)" else angle
+    batch = daily_batch_generator.generate_daily_batch(force_angle=force)
+    lines = [
+        f"### 🎉 5-Post Batch Generated for {batch['batch_date']}!",
+        f"**Character:** {batch['character']} | **Total Posts:** {batch['total_posts']}\n",
+        "| Time | Title | Post ID | Video Path | Status |",
+        "| :--- | :--- | :--- | :--- | :--- |",
+    ]
+    for p in batch["posts"]:
+        lines.append(f"| **{p['time']}** | {p['title']} | `{p['post_id']}` | `{p['video_path']}` | ✅ {p['status']} |")
+    lines.append("\n*All 5 posts are saved in SQLite database and queued for automated publishing.*")
+    return "\n".join(lines)
+
+
+def handle_generate_single_slot(slot_name: str, angle: str) -> Tuple[str, Optional[str]]:
+    """Generates a single designated daily content slot on demand."""
+    mapping = {
+        "Slot 1 (08:00 AM) - Morning OOTD & Job Tip": 0,
+        "Slot 2 (12:00 PM) - Lunch Chai & Mumbai Cafe": 1,
+        "Slot 3 (04:00 PM) - 3 Exercises Flat Tummy (Gym)": 2,
+        "Slot 4 (08:00 PM) - Summer Evening Dress Haul": 3,
+        "Slot 5 (10:00 PM) - Night Routine & Sign-off": 4,
+    }
+    idx = mapping.get(slot_name, 0)
+    force = None if angle == "Auto (Slot-Based)" else angle
+    res = daily_batch_generator.generate_slot(idx, force_angle=force)
+    status_text = (
+        f"✅ **Slot Generated Successfully!**\n\n"
+        f"• Slot: **{res['time']}** — {res['title']}\n"
+        f"• Theme: {res['theme']}\n"
+        f"• Angle Used: `{res['angle']}`\n"
+        f"• Post ID: `{res['post_id']}`\n"
+        f"• Audio: `{res['voice_path']}`\n"
+        f"• Video: `{res['video_path']}`\n\n"
+        f"**Caption:**\n{res['caption']}"
+    )
+    return status_text, res["video_path"]
+
+
 # ── Brands & Post History CRUD ────────────────────────────
 
 def get_brands_data():
@@ -352,7 +416,95 @@ def build_dashboard():
                 motion_status,
             )
 
-        # ── Tab 2: 👩 AI Model & Face LoRA Manager ──
+        # ── Tab 2: 📅 Aisha 5-Posts/Day Studio (Open-Generative-AI Style) ──
+        with gr.Tab("📅 Aisha 5-Posts/Day Studio", id="aisha_daily_studio"):
+            gr.Markdown("### 🧑‍🤝‍🧑 Aisha Character Studio & 5-Posts/Day Automation")
+            gr.Markdown(
+                "Inspired by **Anil-matcha/Open-Generative-AI**. Manage Aisha's consistent face across multiple angles, "
+                "generate her 5 daily lifecycle posts (08:00, 12:00, 16:00, 20:00, 22:00) with Qwen3-TTS & Wan2.2 MoE, "
+                "and export directly to Open-Generative-AI format."
+            )
+
+            with gr.Row():
+                with gr.Column(scale=5):
+                    gr.Markdown("#### 🎭 Multi-Angle Reference Face Picker")
+                    active_angle_dropdown = gr.Dropdown(
+                        choices=["smiling", "front_face", "side_profile", "three_quarter", "serious", "looking_away"],
+                        value="smiling",
+                        label="Selected Face Angle (Reference Picker)",
+                    )
+                    set_angle_btn = gr.Button("🎯 Set Active Reference Angle", variant="secondary")
+                    angle_status_msg = gr.Textbox(label="Status", interactive=False)
+                    current_face_preview = gr.Image(
+                        value=character_studio.get_active_reference_image(),
+                        label="Active Aisha Reference Face",
+                        interactive=False,
+                    )
+                    set_angle_btn.click(
+                        handle_change_angle,
+                        active_angle_dropdown,
+                        [angle_status_msg, current_face_preview],
+                    )
+
+                    gr.Markdown("#### 📦 Open-Generative-AI Compatibility")
+                    export_open_gen_btn = gr.Button("💾 Export to Open-Generative-AI (JSON)", variant="primary")
+                    export_open_gen_msg = gr.Textbox(label="Export Status", interactive=False)
+                    export_open_gen_btn.click(
+                        handle_export_open_gen,
+                        None,
+                        export_open_gen_msg,
+                    )
+
+                with gr.Column(scale=7):
+                    gr.Markdown("#### ⚡ 1-Click 5-Post Daily Batch Automation")
+                    gr.Markdown("""
+| Time | Slot Name | Angle | Voice Emotion | Platform / Type |
+| :--- | :--- | :--- | :--- | :--- |
+| **08:00 AM** | Morning OOTD & Job Tip | Smiling | Happy | Instagram Reel |
+| **12:00 PM** | Lunch Chai & Mumbai Cafe | 3/4 Angle | Chill | Instagram Reel |
+| **04:00 PM** | 3 Exercises Flat Tummy | Front Face | Excited | Instagram Reel |
+| **08:00 PM** | Summer Evening Dress Haul | Serious | Sultry | Instagram Reel |
+| **10:00 PM** | Night Routine & Sign-off | Looking Away | Whisper | Instagram Story |
+                    """)
+
+                    override_angle_dropdown = gr.Dropdown(
+                        choices=["Auto (Slot-Based)", "smiling", "front_face", "side_profile", "three_quarter", "serious", "looking_away"],
+                        value="Auto (Slot-Based)",
+                        label="Batch Angle Override (Leave Auto to let each slot pick its signature angle)",
+                    )
+                    gen_all_batch_btn = gr.Button("🚀 Generate Today's 5 Automated Posts", variant="primary", size="lg")
+                    batch_report_md = gr.Markdown(label="Batch Output Report")
+
+                    gen_all_batch_btn.click(
+                        handle_generate_5_posts,
+                        override_angle_dropdown,
+                        batch_report_md,
+                    )
+
+                    gr.Markdown("---")
+                    gr.Markdown("#### 🎯 On-Demand Single Slot Generator")
+                    single_slot_selector = gr.Dropdown(
+                        choices=[
+                            "Slot 1 (08:00 AM) - Morning OOTD & Job Tip",
+                            "Slot 2 (12:00 PM) - Lunch Chai & Mumbai Cafe",
+                            "Slot 3 (04:00 PM) - 3 Exercises Flat Tummy (Gym)",
+                            "Slot 4 (08:00 PM) - Summer Evening Dress Haul",
+                            "Slot 5 (10:00 PM) - Night Routine & Sign-off",
+                        ],
+                        value="Slot 1 (08:00 AM) - Morning OOTD & Job Tip",
+                        label="Select Daily Slot",
+                    )
+                    gen_single_btn = gr.Button("🎬 Generate Selected Slot Now", variant="secondary")
+                    single_status_output = gr.Textbox(label="Single Slot Details", interactive=False, lines=4)
+                    single_video_output = gr.Video(label="Rendered Slot Preview", interactive=False)
+
+                    gen_single_btn.click(
+                        handle_generate_single_slot,
+                        [single_slot_selector, override_angle_dropdown],
+                        [single_status_output, single_video_output],
+                    )
+
+        # ── Tab 3: 👩 AI Model & Face LoRA Manager ──
         with gr.Tab("👩 AI Model & Face LoRA", id="model_lora"):
             gr.Markdown("### 🎭 Consistent Face Model (LoRA) Management")
             gr.Markdown("Manage your 20-photo trained face model (`my_face.safetensors`). This guarantees that every reel generated looks 100% like your AI model.")

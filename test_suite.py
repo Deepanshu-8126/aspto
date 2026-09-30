@@ -315,6 +315,85 @@ class TestChineseApache2Models(unittest.TestCase):
         self.assertIn("cosyvoice2", mgr.engines)
 
 
+class TestAishaCharacterStudio(unittest.TestCase):
+    """
+    Tests for Open-Generative-AI inspired Aisha Character Studio & Reference Face Picker.
+    """
+    def test_character_profile_and_angles(self):
+        from actions.character_studio import AishaCharacterStudio
+        studio = AishaCharacterStudio()
+        profile = studio.get_profile()
+        self.assertEqual(profile["name"], "Aisha Verma")
+        self.assertEqual(profile["age"], 24)
+        self.assertIn("smiling", profile["angles"])
+        self.assertIn("front_face", profile["angles"])
+
+        # Test angle picker
+        msg = studio.set_active_angle("smiling")
+        self.assertIn("Active reference face set to: Smiling", msg)
+        ref_path = studio.get_active_reference_image()
+        self.assertTrue(os.path.exists(ref_path))
+
+    def test_export_open_generative_ai_json(self):
+        from actions.character_studio import AishaCharacterStudio
+        studio = AishaCharacterStudio()
+        out_json = "data/test_aisha_open_gen.json"
+        res_path = studio.export_open_generative_ai_format(output_path=out_json)
+        self.assertTrue(os.path.exists(res_path))
+
+        import json
+        with open(res_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        self.assertEqual(data["app"], "Open-Generative-AI")
+        self.assertEqual(data["studio_tab"], "AI Influencer Studio")
+        self.assertEqual(data["character"]["name"], "Aisha Verma")
+        self.assertIn("promptModifier", data["character"])
+
+
+class TestDailyBatchGenerator(unittest.TestCase):
+    """
+    Tests for 5 Posts/Day automated batch generator and schedule orchestration.
+    """
+    def test_schedule_slots_definition(self):
+        from actions.daily_batch_generator import DailyBatchGenerator, DAILY_SCHEDULE_SLOTS
+        generator = DailyBatchGenerator()
+        slots = generator.get_schedule_slots()
+        self.assertEqual(len(slots), 5)
+        self.assertEqual(slots[0]["time"], "08:00")
+        self.assertEqual(slots[1]["time"], "12:00")
+        self.assertEqual(slots[2]["time"], "16:00")
+        self.assertEqual(slots[3]["time"], "20:00")
+        self.assertEqual(slots[4]["time"], "22:00")
+
+    def test_generate_single_slot(self):
+        from actions.daily_batch_generator import DailyBatchGenerator
+        from local import database as db
+        generator = DailyBatchGenerator()
+        res = generator.generate_slot(slot_index=0)
+        self.assertIn("post_id", res)
+        self.assertGreater(res["post_id"], 0)
+        self.assertEqual(res["time"], "08:00")
+        self.assertEqual(res["status"], "generated")
+
+        # Verify DB has this post
+        db_post = db.get_post(res["post_id"])
+        self.assertIsNotNone(db_post)
+        self.assertEqual(db_post["status"], "generated")
+
+    def test_export_open_generative_ai_schedule(self):
+        from actions.daily_batch_generator import DailyBatchGenerator
+        generator = DailyBatchGenerator()
+        out_json = "data/test_daily_batch_open_gen.json"
+        res_path = generator.export_open_generative_ai_batch(output_path=out_json)
+        self.assertTrue(os.path.exists(res_path))
+
+        import json
+        with open(res_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        self.assertEqual(data["format"], "Open-Generative-AI Workflow Schedule")
+        self.assertEqual(len(data["slots"]), 5)
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("🧪 Running AI-INFLUENCER-OS Test Suite...")
