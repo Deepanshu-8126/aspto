@@ -25,98 +25,94 @@ logger = logging.getLogger("daily_batch_generator")
 
 DAILY_SCHEDULE_SLOTS = [
     {
-        "slot_id": "slot_1_morning",
+        "slot_id": "slot_1_story_morning",
         "time": "08:00",
-        "title": "Morning OOTD & Job Tip",
-        "preferred_angle": "smiling",
-        "theme": "Career & Daily Motivation",
-        "scene_prompt": (
-            "Diya Rai in smart casual beige blazer and white silk top, holding black coffee cup, "
-            "modern Mumbai high-rise office balcony, bright warm morning sunlight, confident radiant smile, "
-            "photorealistic 8k, vertical 9:16"
-        ),
-        "voice_script": (
-            "Good morning fam! Starting my day with fresh energy. Aaj ka quick tip: never wait "
-            "for the perfect moment, create it! What is your main goal today? Tell me in the comments!"
-        ),
-        "emotion": "happy",
-        "post_type": "reel",
-        "hashtags": ["#Diya RaiVerma", "#MorningVibes", "#OOTD", "#CareerTips", "#MumbaiInfluencer", "#DailyMotivation"],
-    },
-    {
-        "slot_id": "slot_2_lunch",
-        "time": "12:00",
-        "title": "Lunch Break Chai & Mumbai Cafe",
-        "preferred_angle": "three_quarter",
-        "theme": "Mumbai Lifestyle & Food",
-        "scene_prompt": (
-            "Diya Rai in pastel floral summer dress, outdoor seating at aesthetic Bandra cafe, "
-            "holding traditional cutting chai glass, soft natural sunlight, relaxed friendly vibe, "
-            "photorealistic 8k, vertical 9:16"
-        ),
-        "voice_script": (
-            "Lunch break scene! Honestly, Mumbai ki cutting chai ke bina din adhoora hai. "
-            "Tum sabka lunch break kaisa ja raha hai? Are you team chai or team coffee?"
-        ),
-        "emotion": "chill",
-        "post_type": "reel",
-        "hashtags": ["#MumbaiCafe", "#ChaiLover", "#LifestyleBlogger", "#MidDayVibes", "#BandraDiaries", "#Diya RaiDiaries"],
-    },
-    {
-        "slot_id": "slot_3_fitness",
-        "time": "16:00",
-        "title": "3 Exercises for Flat Tummy & Gym Fit",
-        "preferred_angle": "front_face",
-        "theme": "Fitness & Core Routine",
-        "scene_prompt": (
-            "Diya Rai in sleek mauve gym activewear, holding water bottle, aesthetic fitness studio "
-            "with ambient neon rim light, fit athletic physique, determined energetic expression, "
-            "photorealistic 8k, vertical 9:16"
-        ),
-        "voice_script": (
-            "Post-workout glow! 3 simple core exercises you can do anywhere, even during busy work days. "
-            "Remember guys, consistency beats perfection every single time! Let's get active!"
-        ),
-        "emotion": "excited",
-        "post_type": "reel",
-        "hashtags": ["#FitnessMotivation", "#WorkoutRoutine", "#FlatTummyTips", "#HealthyLiving", "#Diya RaiFit"],
-    },
-    {
-        "slot_id": "slot_4_evening",
-        "time": "20:00",
-        "title": "Summer Evening Dress Haul & Glam",
-        "preferred_angle": "serious",
-        "theme": "Fashion Inspo & Evening Glam",
-        "scene_prompt": (
-            "Diya Rai in emerald satin evening dress, luxury Mumbai rooftop restaurant overlooking "
-            "city lights at golden hour dusk, elegant posture, high-fashion editorial look, "
-            "photorealistic 8k, vertical 9:16"
-        ),
-        "voice_script": (
-            "Evening glam look unlocked! Obsessed with this satin silhouette for dinner nights. "
-            "How would you style this look? Drop a comment if you want the outfit link!"
-        ),
-        "emotion": "sultry",
-        "post_type": "reel",
-        "hashtags": ["#EveningGlam", "#FashionHaul", "#DinnerOutfit", "#LuxuryLifestyle", "#MumbaiNights", "#StyleInspo"],
-    },
-    {
-        "slot_id": "slot_5_night",
-        "time": "22:00",
-        "title": "Night Routine & Sign-off",
-        "preferred_angle": "looking_away",
-        "theme": "Self-care & Night Story",
-        "scene_prompt": (
-            "Diya Rai in cozy cream silk loungewear at home, soft warm fairy lights, serene peaceful expression, "
-            "candid look towards window, peaceful evening aesthetic, photorealistic 8k, vertical 9:16"
-        ),
-        "voice_script": (
-            "Wrapping up a beautiful day. Truly grateful for all your love on today's posts. "
-            "Time to unplug, rest, and recharge. Kal subah milte hain, good night everyone!"
-        ),
-        "emotion": "whisper",
+        "title": "Good Morning Story",
         "post_type": "story",
-        "hashtags": ["#NightRoutine", "#GoodNightFam", "#SelfCare", "#PeacefulMindset", "#Diya RaiDiaries"],
+        "preferred_angle": "smiling",
+        "theme": "Morning Sunlight & Chai",
+        "scene_prompt": (
+            "candid vertical story shot of diyarai woman in Bandra apartment balcony holding ceramic cutting chai mug, "
+            "warm morning sun rays, cozy oversized white tee, candid natural smile, shot on iphone 15 pro, realistic film grain"
+        ),
+        "voice_script": "Sunny day in Mumbai! ☀️ Aaj boutique pe fittings hain, GRWM video later! Have a lovely day guys! ✨",
+        "emotion": "happy",
+        "hashtags": ["#MorningVibes", "#MumbaiSun", "#AishaDiaries"],
+    },
+    {
+        "slot_id": "slot_2_reel_ootd",
+        "time": "08:30",
+        "title": "Outfit of the Day (OOTD)",
+        "post_type": "reel",
+        "preferred_angle": "front_face",
+        "theme": "Fashion Inspo & Street Style",
+        "scene_prompt": (
+            "photorealistic medium wide shot of diyarai woman in chic tailored beige linen blazer and vintage denim, "
+            "walking down leafy Bandra street, holding iced coffee, confident natural walk, 8k vertical 9:16"
+        ),
+        "voice_script": "Aaj ka outfit check! 🔥 Linen blazer is literally my summer lifesaver. Comment mein batao kal kya pehnu?",
+        "emotion": "excited",
+        "hashtags": ["#OOTD", "#StreetStyleMumbai", "#BandraDiaries", "#StyleInspo", "#ReelsIndia"],
+    },
+    {
+        "slot_id": "slot_3_story_lunch",
+        "time": "12:30",
+        "title": "Lunch Break Chai & Vada Pav Story",
+        "post_type": "story",
+        "preferred_angle": "three_quarter",
+        "theme": "BTS Studio & Lunch Break",
+        "scene_prompt": (
+            "candid phone perspective shot of diyarai woman in studio styling room holding plate with hot vada pav, "
+            "clothes racks in soft blurred background, playful happy expression, natural room light, raw 8k"
+        ),
+        "voice_script": "Lunch break scene! 🫓 Bandra ka best vada pav, honestly nothing beats this. Kal wahi jaungi!",
+        "emotion": "chill",
+        "hashtags": ["#LunchBreak", "#MumbaiFoodie", "#VadaPavLove", "#BTS"],
+    },
+    {
+        "slot_id": "slot_4_reel_bts",
+        "time": "16:30",
+        "title": "Boutique Fittings & Shoot BTS Reel",
+        "post_type": "reel",
+        "preferred_angle": "three_quarter",
+        "theme": "BTS Creator Chaos",
+        "scene_prompt": (
+            "candid behind the scenes footage of diyarai woman adjusting pastel evening dresses on mannequin, "
+            "measuring tape around neck, focused creative expressions then laughing at camera, natural studio lighting, 9:16"
+        ),
+        "voice_script": "Fittings ke beech mein! 💅 Costume change number 4 and honestly thak gayi hoon, but the dresses are so worth it! 💪",
+        "emotion": "sultry",
+        "hashtags": ["#StylistDiaries", "#BoutiqueLife", "#ShootBTS", "#FashionDesigner"],
+    },
+    {
+        "slot_id": "slot_5_reel_personal",
+        "time": "20:00",
+        "title": "Relatable Story / Mom Conversation Reel",
+        "post_type": "reel",
+        "preferred_angle": "serious",
+        "theme": "Relatable Indian Family Life",
+        "scene_prompt": (
+            "candid portrait of diyarai woman sitting on cozy sofa at home holding phone to ear laughing, "
+            "warm ambient lamp lighting, cozy pastel pajama set, natural skin texture, laughing candidly, 8k uhd"
+        ),
+        "voice_script": "Mummy ne phone kiya aur pehla question: 'Beta shaadi kab kar rahi ho?' 😂 Indian moms will literally never change! Can you relate?",
+        "emotion": "happy",
+        "hashtags": ["#DesiRelatable", "#IndianMoms", "#FamilyMoments", "#FunnyReels", "#JustGirlThings"],
+    },
+    {
+        "slot_id": "slot_6_story_night",
+        "time": "22:00",
+        "title": "Good Night & Cat Mochi Story",
+        "post_type": "story",
+        "preferred_angle": "looking_away",
+        "theme": "Bedtime Routine & Cat Mochi",
+        "scene_prompt": (
+            "cozy dark bedroom illuminated by soft fairy lights, diyarai woman in oversized hoodie petting orange tabby cat Mochi on bed, "
+            "sleepy gentle smile, serene aesthetic, raw photorealistic film grain"
+        ),
+        "voice_script": "Mochi ke saath cuddling in bed 🐱💤 Wrapping up for the night. Good night everyone, sweet dreams! 🌙",
+        "emotion": "whisper",
+        "hashtags": ["#GoodNightFam", "#CatMom", "#MochiVibes", "#SleepyHours"],
     },
 ]
 
@@ -287,6 +283,21 @@ class DailyBatchGenerator:
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(schedule_data, f, indent=2)
         return output_path
+
+    def plan_dynamic_lifestyle_carousel(
+        self,
+        topic_or_location: Optional[str] = None,
+        outfit_style: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Uses the LLM Lifestyle Director to generate a 4-slide Instagram Carousel & Reel plan
+        with natural poses, real Gen-Z caption, and viral audio.
+        """
+        from brain.lifestyle_director import lifestyle_director
+        return lifestyle_director.plan_lifestyle_post(
+            topic_or_location=topic_or_location,
+            outfit_style=outfit_style
+        )
 
 
 # Global singleton

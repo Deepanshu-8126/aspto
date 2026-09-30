@@ -26,6 +26,62 @@
   },
   "recent_generations": [
     {
+      "id": "gen_1790736785",
+      "topic": "glass skin routine",
+      "video_url": "output/video/reel_01.mp4",
+      "engine": "wan2.7",
+      "created_at": "2026-09-30T08:23:05.024827",
+      "views": 0
+    },
+    {
+      "id": "gen_1790736007",
+      "topic": "glass skin routine",
+      "video_url": "output/video/reel_01.mp4",
+      "engine": "wan2.7",
+      "created_at": "2026-09-30T08:10:07.563089",
+      "views": 0
+    },
+    {
+      "id": "gen_1790734063",
+      "topic": "glass skin routine",
+      "video_url": "output/video/reel_01.mp4",
+      "engine": "wan2.7",
+      "created_at": "2026-09-30T07:37:43.774325",
+      "views": 0
+    },
+    {
+      "id": "gen_1790733134",
+      "topic": "glass skin routine",
+      "video_url": "output/video/reel_01.mp4",
+      "engine": "wan2.7",
+      "created_at": "2026-09-30T07:22:14.268533",
+      "views": 0
+    },
+    {
+      "id": "gen_1790733097",
+      "topic": "glass skin routine",
+      "video_url": "output/video/reel_01.mp4",
+      "engine": "wan2.7",
+      "created_at": "2026-09-30T07:21:37.814544",
+      "views": 0
+    },
+    {
+      "id": "gen_1790732500",
+      "topic": "glass skin routine",
+      "video_url": "output/video/reel_01.mp4",
+      "engine": "wan2.7",
+      "created_at": "2026-09-30T07:11:40.960265",
+      "views": 0
+    },
+    {
+      "id": "gen_1790732374",
+      "topic": "glass skin routine",
+      "video_url": "output/video/reel_01.mp4",
+      "engine": "wan2.7",
+      "created_at": "2026-09-30T07:09:34.462118",
+      "views": 0
+    },
+    {
       "id": "gen_1790712555",
       "topic": "glass skin routine",
       "video_url": "output/video/reel_01.mp4",

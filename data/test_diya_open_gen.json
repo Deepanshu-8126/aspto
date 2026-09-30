@@ -1,0 +1,25 @@
+{
+  "app": "Open-Generative-AI",
+  "version": "1.0.9",
+  "studio_tab": "AI Influencer Studio",
+  "character": {
+    "name": "Diya Rai",
+    "gender": "female",
+    "age": 23,
+    "ethnicity": "Indian",
+    "hair": "Long glossy dark brown wavy hair with subtle highlights",
+    "eyes": "Expressive captivating almond deep brown eyes",
+    "bodyType": "Slim athletic, 5'6\" height",
+    "clothingStyle": "Chic Mumbai street fashion + luxury evening glam",
+    "referenceImages": [
+      "models\\character\\aisha\\front_face.png",
+      "models\\character\\aisha\\side_profile.png",
+      "models\\character\\aisha\\three_quarter.png",
+      "models\\character\\aisha\\smiling.png",
+      "models\\character\\aisha\\serious.png",
+      "models\\character\\aisha\\looking_away.png"
+    ],
+    "activeReference": "models\\character\\aisha\\smiling.png",
+    "promptModifier": "ultra realistic Indian young woman Diya Rai, 24yo, Long glossy dark brown wavy hair with subtle highlights, Expressive captivating almond deep brown eyes, flawless skin, natural warm lighting, 8k uhd, dslr portrait"
+  }
+}

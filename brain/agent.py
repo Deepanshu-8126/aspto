@@ -115,9 +115,9 @@ class BrainAgent:
                 # Format conversation for Gemini
                 contents = [f"{system_prompt}\n\nCONVERSATION HISTORY:"]
                 for h in history[:-1]:  # Exclude current message already in history
-                    role_tag = "Fan" if h["role"] == "user" else "Aisha"
+                    role_tag = "Fan" if h["role"] == "user" else "Diya"
                     contents.append(f"{role_tag}: {h['content']}")
-                contents.append(f"Fan: {current_message}\nAisha:")
+                contents.append(f"Fan: {current_message}\nDiya:")
 
                 full_prompt = "\n".join(contents)
                 resp = self._gemini_client.models.generate_content(
@@ -129,23 +129,17 @@ class BrainAgent:
             except Exception as e:
                 logger.warning(f"Gemini API generation error: {e}")
 
-        # Intelligent Fallback matching relationship tier
+        # Intelligent Living Soul Fallback (Anti-AI & Relationship Aware)
+        from brain.living_soul import living_soul
+        natural_reply = living_soul.generate_human_dm_reply(current_message, user.get("username", ""))
+        
         tier = user.get("relationship_tier", "new")
-        facts = self.memory.get_facts(user["user_id"])
-        product = facts.get("product_interest", "item")
+        facts = self.memory.get_facts(user.get("user_id", ""))
+        product = facts.get("product_interest")
 
         if tier == "vip":
-            return (
-                f"Arre meri jaan! 🥰 Tumhara message dekhte hi reply kiya. "
-                f"Haan bilkul {product} available hai! Tumhare liye special code: AISHA100 ✨ Aur batao kaise ho?"
-            )
+            return f"Arre meri jaan, mera favorite fan! 🥰 {natural_reply} Tumhare liye special VIP code: AISHA100 / DIYA100 hai ✨"
         elif tier == "regular":
-            return (
-                f"Arre tum wapas aa gaye! 😄 Haan wahi {product} abhi stock mein hai. "
-                f"Tumhare liye 50 off: code AISHA50 lagao! Link bhejoon kya? 💕"
-            )
-        else:
-            return (
-                f"Heyy babe! 💕 {self.character.get_busy_excuse()} "
-                f"Haan bilkul! Yeh product maine khud use kiya hai, super aesthetic results hain ✨ Link bio mein hai ya DM karoon?"
-            )
+            return f"Hey! 💕 {natural_reply} Tumhare liye special discount code: AISHA50 / DIYA50 laga lena! ✨"
+
+        return natural_reply

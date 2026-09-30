@@ -1,0 +1,122 @@
+import json
+
+notebook = {
+    "nbformat": 4,
+    "nbformat_minor": 0,
+    "metadata": {
+        "accelerator": "GPU",
+        "colab": {
+            "provenance": [],
+            "gpuType": "T4"
+        },
+        "kernelspec": {
+            "name": "python3",
+            "display_name": "Python 3"
+        },
+        "language_info": {
+            "name": "python"
+        }
+    },
+    "cells": [
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "# 👑 Diya Rai — 1-Click SDXL Face LoRA Training\n",
+                "**Google Colab Free T4 GPU (~20 mins)**\n",
+                "Train your custom `diyarai_sdxl_lora.safetensors` model to generate Diya Rai in Fooocus, ComfyUI, or Automatic1111 with 100% facial consistency!"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Step 1: Install Kohya SD-Scripts & PyTorch dependencies\n",
+                "!git clone --depth 1 https://github.com/kohya-ss/sd-scripts.git\n",
+                "%cd sd-scripts\n",
+                "!pip install -q torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121\n",
+                "!pip install -q --upgrade -r requirements.txt\n",
+                "!pip install -q xformers bitsandbytes accelerate diffusers\n",
+                "print('✅ Dependencies Installed Successfully!')"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Step 2: Upload and Extract Diya Rai Dataset\n",
+                "import os, zipfile\n",
+                "%cd /content\n",
+                "os.makedirs('/content/dataset', exist_ok=True)\n",
+                "os.makedirs('/content/output', exist_ok=True)\n",
+                "\n",
+                "if not os.path.exists('/content/diyarai_lora_dataset.zip'):\n",
+                "    from google.colab import files\n",
+                "    print('Upload diyarai_lora_dataset.zip from your laptop:')\n",
+                "    uploaded = files.upload()\n",
+                "\n",
+                "with zipfile.ZipFile('/content/diyarai_lora_dataset.zip', 'r') as zip_ref:\n",
+                "    zip_ref.extractall('/content/dataset')\n",
+                "print('✅ Dataset Extracted! Images ready for training.')"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Step 3: Run 1-Click SDXL LoRA Training (Trigger Word: diyarai)\n",
+                "%cd /content/sd-scripts\n",
+                "!accelerate launch --num_cpu_threads_per_process 2 sdxl_train_network.py \\\n",
+                "  --pretrained_model_name_or_path='stabilityai/stable-diffusion-xl-base-1.0' \\\n",
+                "  --train_data_dir='/content/dataset' \\\n",
+                "  --output_dir='/content/output' \\\n",
+                "  --output_name='diyarai_sdxl_lora' \\\n",
+                "  --save_model_as=safetensors \\\n",
+                "  --resolution='1024,1024' \\\n",
+                "  --learning_rate=1e-4 \\\n",
+                "  --network_module=networks.lora \\\n",
+                "  --network_dim=32 \\\n",
+                "  --network_alpha=16 \\\n",
+                "  --max_train_epochs=5 \\\n",
+                "  --train_batch_size=1 \\\n",
+                "  --mixed_precision='fp16' \\\n",
+                "  --save_precision='fp16' \\\n",
+                "  --gradient_checkpointing \\\n",
+                "  --xformers \\\n",
+                "  --bucket_reso_steps=64 \\\n",
+                "  --min_bucket_reso=512 \\\n",
+                "  --max_bucket_reso=1024\n",
+                "\n",
+                "print('🎉 TRAINING COMPLETED!')"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Step 4: Download your trained LoRA Model\n",
+                "from google.colab import files\n",
+                "import os\n",
+                "lora_path = '/content/output/diyarai_sdxl_lora.safetensors'\n",
+                "if os.path.exists(lora_path):\n",
+                "    print(f'Downloading {lora_path}...')\n",
+                "    files.download(lora_path)\n",
+                "else:\n",
+                "    print('Trained model not found in output directory!')"
+            ]
+        }
+    ]
+}
+
+with open("d:/ai_influencer/training/Diya_Rai_LoRA_Training_Colab.ipynb", "w", encoding="utf-8") as f:
+    json.dump(notebook, f, indent=2)
+
+print("Created Diya_Rai_LoRA_Training_Colab.ipynb successfully!")

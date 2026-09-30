@@ -33,11 +33,31 @@ class Wan22MoEEngine:
         duration: int = 5,
         output_path: str = "output/video/clip_wan22.mp4",
     ) -> str:
-        """Generates video clip using Wan2.2 MoE inference."""
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        logger.info(f"Generating {duration}s clip via Wan2.2 MoE ({self.model_name})...")
-        # In cloud GPU kernel, invokes diffusers/Wan2.2 pipeline
-        # Fallback to FFmpeg motion compositor when on CPU/local
+        gpu_worker_url = os.environ.get("GPU_WORKER_URL", "").strip()
+
+        # 1. Real Wan2.2 MoE GPU Generation via Remote Kaggle Worker
+        if gpu_worker_url:
+            try:
+                import requests
+                logger.info(f"🚀 Dispatching Wan2.2 generation to Kaggle GPU Worker ({gpu_worker_url})...")
+                resp = requests.post(
+                    f"{gpu_worker_url}/generate_video",
+                    json={"prompt": prompt, "duration": duration, "model": "wan-2.2"},
+                    timeout=180
+                )
+                if resp.status_code == 200 and len(resp.content) > 1024:
+                    with open(output_path, "wb") as f:
+                        f.write(resp.content)
+                    logger.info(f"✅ Real Wan2.2 AI Video received from Kaggle GPU! Saved to {output_path}")
+                    return output_path
+                else:
+                    logger.warning(f"Kaggle GPU returned status {resp.status_code}. Using local compositor.")
+            except Exception as e:
+                logger.warning(f"Kaggle GPU Worker unreachable: {e}. Falling back to local motion compositor.")
+
+        # 2. Local fallback motion compositor
+        logger.info(f"Generating {duration}s clip via local motion compositor...")
         cmd = [
             "ffmpeg", "-y",
             "-loop", "1", "-i", image_path if image_path and os.path.exists(image_path) else "output/avatar.png",

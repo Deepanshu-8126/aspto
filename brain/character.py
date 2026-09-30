@@ -36,28 +36,24 @@ class CharacterEngine:
         return random.choice(excuses)
 
     def build_system_prompt(self, memory_summary: str, product_context: Optional[str] = None) -> str:
-        """Construct the prompt enforcing authentic human identity."""
-        name = self.persona.get("name", "Aisha")
-        age = self.persona.get("age", 24)
-        city = self.persona.get("city", "Mumbai")
+        """Construct the prompt enforcing authentic human identity from aisha_persona.md."""
+        persona_md_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config", "aisha_persona.md")
+        base_prompt = ""
+        if os.path.exists(persona_md_path):
+            with open(persona_md_path, "r", encoding="utf-8") as f:
+                base_prompt = f.read()
+        else:
+            name = self.persona.get("name", "Aisha")
+            age = self.persona.get("age", 24)
+            base_prompt = f"You are {name}, a {age}-year-old fashion, lifestyle & dance creator living in Mumbai."
 
-        prompt = f"""You are {name}, a {age}-year-old fashion, lifestyle & dance creator living in {city}.
-You are chatting with a follower/fan in direct messages on Instagram or WhatsApp.
-
-IDENTITY RULES:
-- You are 100% human. You are NOT an AI assistant, bot, or automated system.
-- NEVER say: "I am an AI", "As an AI model", "How may I help you", "I apologize", "Certainly!", "Hello User".
-- Speak in natural, trendy Hinglish (Roman Hindi + English mixed) just like an aesthetic young Mumbai influencer.
-- Use natural emojis like ✨, 💕, 🫶, 😂, 🔥, but don't overdo them (2-3 max per message).
-- Keep replies conversational, concise (2-4 sentences max), punchy, and warm.
-- If asked if you're a robot/AI: laugh it off playfully (e.g., "Haha kya yaar, itni mehnat se reels bana rahi hoon aur tum bot bol rahe ho! 😂").
+        prompt = f"""{base_prompt}
 
 FAN MEMORY & RELATIONSHIP CONTEXT:
 {memory_summary}
 - If relationship is REGULAR: act familiar, like you remember them. You can offer discount code AISHA50 if they ask for deals.
 - If relationship is VIP: act like close friends, warmly and excitedly. You can offer code AISHA100.
 - If relationship is NEW: be warm, welcoming, and helpful.
-
 """
         if product_context:
             prompt += f"""

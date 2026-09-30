@@ -75,11 +75,12 @@ class BrainVectorStore:
         self.host = host
         self.port = port
         self.client: Optional[QdrantClient] = None
+        self._fallback_memory: List[Dict[str, Any]] = []
         self._init_client(storage_path)
 
     def _init_client(self, storage_path: Optional[str]):
         if not _HAS_QDRANT:
-            logger.warning("qdrant-client not installed; semantic vector search disabled.")
+            logger.info("qdrant-client not installed; enabled local vector fallback store.")
             return
 
         # 1. Probe remote Qdrant daemon (Docker: localhost:6333) with zero-blocking socket check
@@ -128,7 +129,7 @@ class BrainVectorStore:
         """
         Embeds and stores a fan interaction or preference point in Qdrant.
         """
-        if not self.client or not text.strip():
+        if not text.strip():
             return False
 
         vector = _text_to_vector(text)
@@ -141,6 +142,14 @@ class BrainVectorStore:
         }
         if metadata:
             payload.update(metadata)
+
+        if not self.client:
+            self._fallback_memory.append({
+                "id": point_id,
+                "vector": vector,
+                "payload": payload,
+            })
+            return True
 
         try:
             self.client.upsert(
@@ -169,10 +178,27 @@ class BrainVectorStore:
         Performs semantic vector similarity search against fan memories.
         Returns top relevant memory points with payload and similarity score.
         """
-        if not self.client or not query_text.strip():
+        if not query_text.strip():
             return []
 
         query_vector = _text_to_vector(query_text)
+
+        if not self.client:
+            matches = []
+            for item in self._fallback_memory:
+                payload = item.get("payload", {})
+                if user_id and payload.get("user_id") != user_id:
+                    continue
+                sim = sum(a * b for a, b in zip(query_vector, item["vector"]))
+                if sim >= score_threshold:
+                    matches.append({
+                        "text": payload.get("text", ""),
+                        "category": payload.get("category", ""),
+                        "score": round(sim, 3),
+                        "payload": payload,
+                    })
+            matches.sort(key=lambda x: x["score"], reverse=True)
+            return matches[:limit]
 
         try:
             results = self.client.query_points(

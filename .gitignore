@@ -19,8 +19,8 @@ data/ig_session.json
 data/token.json
 !data/.gitkeep
 
-# Heavy Model weights (Store in HF / Drive)
-models/lora/*.safetensors
+# Heavy Model weights (Store in HF / Drive / Kaggle)
+*.safetensors
 models/voice/*.wav
 *.ckpt
 *.pt

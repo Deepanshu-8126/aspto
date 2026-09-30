@@ -1,0 +1,26 @@
+{
+  "travel_carousel": {
+    "alpha": 12.0,
+    "beta": 2.0
+  },
+  "bts_vanity_story": {
+    "alpha": 6.0,
+    "beta": 2.0
+  },
+  "grwm_street_style": {
+    "alpha": 7.0,
+    "beta": 3.0
+  },
+  "personal_story_mochi": {
+    "alpha": 9.0,
+    "beta": 1.0
+  },
+  "brand_integration": {
+    "alpha": 5.0,
+    "beta": 5.0
+  },
+  "relatable_thread": {
+    "alpha": 8.0,
+    "beta": 2.0
+  }
+}

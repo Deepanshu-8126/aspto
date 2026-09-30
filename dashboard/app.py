@@ -611,9 +611,11 @@ def build_dashboard():
 
 
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     app = build_dashboard()
     port = int(os.environ.get("PORT", 7860))
-    print(f"🚀 Starting AI-INFLUENCER-OS Studio Dashboard on http://127.0.0.1:{port}...")
+    print(f"Starting AI-INFLUENCER-OS Studio Dashboard on http://127.0.0.1:{port}...")
     app.launch(
         server_name="0.0.0.0",
         server_port=port,

@@ -1,0 +1,91 @@
+{
+  "format": "Open-Generative-AI Workflow Schedule",
+  "version": "1.0.9",
+  "character_id": "aisha_mumbai_01",
+  "name": "Diya Rai",
+  "slots": [
+    {
+      "time": "08:00",
+      "title": "Morning OOTD & Job Tip",
+      "angle": "smiling",
+      "prompt": "Diya Rai in smart casual beige blazer and white silk top, holding black coffee cup, modern Mumbai high-rise office balcony, bright warm morning sunlight, confident radiant smile, photorealistic 8k, vertical 9:16",
+      "script": "Good morning fam! Starting my day with fresh energy. Aaj ka quick tip: never wait for the perfect moment, create it! What is your main goal today? Tell me in the comments!",
+      "emotion": "happy",
+      "type": "reel",
+      "tags": [
+        "#Diya RaiVerma",
+        "#MorningVibes",
+        "#OOTD",
+        "#CareerTips",
+        "#MumbaiInfluencer",
+        "#DailyMotivation"
+      ]
+    },
+    {
+      "time": "12:00",
+      "title": "Lunch Break Chai & Mumbai Cafe",
+      "angle": "three_quarter",
+      "prompt": "Diya Rai in pastel floral summer dress, outdoor seating at aesthetic Bandra cafe, holding traditional cutting chai glass, soft natural sunlight, relaxed friendly vibe, photorealistic 8k, vertical 9:16",
+      "script": "Lunch break scene! Honestly, Mumbai ki cutting chai ke bina din adhoora hai. Tum sabka lunch break kaisa ja raha hai? Are you team chai or team coffee?",
+      "emotion": "chill",
+      "type": "reel",
+      "tags": [
+        "#MumbaiCafe",
+        "#ChaiLover",
+        "#LifestyleBlogger",
+        "#MidDayVibes",
+        "#BandraDiaries",
+        "#Diya RaiDiaries"
+      ]
+    },
+    {
+      "time": "16:00",
+      "title": "3 Exercises for Flat Tummy & Gym Fit",
+      "angle": "front_face",
+      "prompt": "Diya Rai in sleek mauve gym activewear, holding water bottle, aesthetic fitness studio with ambient neon rim light, fit athletic physique, determined energetic expression, photorealistic 8k, vertical 9:16",
+      "script": "Post-workout glow! 3 simple core exercises you can do anywhere, even during busy work days. Remember guys, consistency beats perfection every single time! Let's get active!",
+      "emotion": "excited",
+      "type": "reel",
+      "tags": [
+        "#FitnessMotivation",
+        "#WorkoutRoutine",
+        "#FlatTummyTips",
+        "#HealthyLiving",
+        "#Diya RaiFit"
+      ]
+    },
+    {
+      "time": "20:00",
+      "title": "Summer Evening Dress Haul & Glam",
+      "angle": "serious",
+      "prompt": "Diya Rai in emerald satin evening dress, luxury Mumbai rooftop restaurant overlooking city lights at golden hour dusk, elegant posture, high-fashion editorial look, photorealistic 8k, vertical 9:16",
+      "script": "Evening glam look unlocked! Obsessed with this satin silhouette for dinner nights. How would you style this look? Drop a comment if you want the outfit link!",
+      "emotion": "sultry",
+      "type": "reel",
+      "tags": [
+        "#EveningGlam",
+        "#FashionHaul",
+        "#DinnerOutfit",
+        "#LuxuryLifestyle",
+        "#MumbaiNights",
+        "#StyleInspo"
+      ]
+    },
+    {
+      "time": "22:00",
+      "title": "Night Routine & Sign-off",
+      "angle": "looking_away",
+      "prompt": "Diya Rai in cozy cream silk loungewear at home, soft warm fairy lights, serene peaceful expression, candid look towards window, peaceful evening aesthetic, photorealistic 8k, vertical 9:16",
+      "script": "Wrapping up a beautiful day. Truly grateful for all your love on today's posts. Time to unplug, rest, and recharge. Kal subah milte hain, good night everyone!",
+      "emotion": "whisper",
+      "type": "story",
+      "tags": [
+        "#NightRoutine",
+        "#GoodNightFam",
+        "#SelfCare",
+        "#PeacefulMindset",
+        "#Diya RaiDiaries"
+      ]
+    }
+  ]
+}

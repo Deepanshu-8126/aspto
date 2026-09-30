@@ -11,6 +11,10 @@ import asyncio
 import logging
 
 import yaml
+from dotenv import load_dotenv
+
+# Load master .env
+load_dotenv()
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -70,12 +74,14 @@ def init_services(config: dict, personality: dict):
     logger.info("✅ Cloud client initialized")
 
     # Instagram Service
+    ig_conf = config.get("instagram", {})
     instagram = InstagramService(
-        username=config["instagram"]["username"],
-        password=config["instagram"]["password"],
-        max_posts_per_day=config["instagram"]["max_posts_per_day"],
-        delay_min=config["instagram"]["human_delay_min"],
-        delay_max=config["instagram"]["human_delay_max"],
+        username=ig_conf.get("username", os.environ.get("IG_USERNAME", "")),
+        password=ig_conf.get("password", os.environ.get("IG_PASSWORD", "")),
+        session_id=ig_conf.get("session_id", os.environ.get("IG_SESSION_ID", "")),
+        max_posts_per_day=ig_conf.get("max_posts_per_day", 5),
+        delay_min=ig_conf.get("human_delay_min", 60),
+        delay_max=ig_conf.get("human_delay_max", 300),
     )
     ig_logged_in = instagram.login()
     if ig_logged_in:
@@ -104,9 +110,11 @@ def init_services(config: dict, personality: dict):
     logger.info("✅ Scheduler initialized")
 
     # Telegram Bot
+    tg_token = os.environ.get("TELEGRAM_BOT_TOKEN") or config.get("telegram", {}).get("bot_token", "")
+    tg_admin = os.environ.get("TELEGRAM_ADMIN_CHAT_ID") or config.get("telegram", {}).get("admin_chat_id", "")
     telegram = TelegramBot(
-        bot_token=config["telegram"]["bot_token"],
-        admin_chat_id=config["telegram"]["admin_chat_id"],
+        bot_token=tg_token,
+        admin_chat_id=tg_admin,
         cloud_client=cloud_client,
         instagram_service=instagram,
         whatsapp_service=whatsapp,
@@ -141,7 +149,7 @@ def main():
     services["scheduler"].start()
     logger.info("⏰ Auto-post scheduler running")
 
-    bot_token = config.get("telegram", {}).get("bot_token", "")
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN") or config.get("telegram", {}).get("bot_token", "")
     if not bot_token or bot_token == "CHANGE_ME":
         logger.warning("=" * 60)
         logger.warning("⚠️ TELEGRAM BOT TOKEN IS NOT CONFIGURED ('CHANGE_ME')")

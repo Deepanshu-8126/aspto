@@ -12,8 +12,8 @@ gemini:
 # ── Instagram (instagrapi) ──
 instagram:
   username: "diyarai_016"
-  password: "Diya12!"
-  session_id: ""                  # optional browser sessionid cookie (100% bypasses checks)
+  password: "CHANGE_ME"
+  session_id: ""                  # optional browser sessionid cookie (loaded from .env)
   mode: "on_demand"               # "on_demand" (jab tera mood ho) ya "automatic"
   max_posts_per_day: 5
   human_delay_min: 60             # seconds between actions
@@ -21,8 +21,8 @@ instagram:
 
 # ── Telegram Bot ──
 telegram:
-  bot_token: "CHANGE_ME"          # Get from @BotFather
-  admin_chat_id: "CHANGE_ME"      # Your Telegram user ID
+  bot_token: "CHANGE_ME"          # Loaded from .env (TELEGRAM_BOT_TOKEN)
+  admin_chat_id: "CHANGE_ME"      # Loaded from .env (TELEGRAM_ADMIN_CHAT_ID)
 
 # ── WhatsApp (OpenWA) ──
 whatsapp:

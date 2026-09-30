@@ -29,9 +29,9 @@ class InstagramService:
         delay_min: int = 60,
         delay_max: int = 300,
     ):
-        self.username = username
-        self.password = password
-        self.session_id = session_id
+        self.username = username or os.environ.get("IG_USERNAME", "")
+        self.password = password or os.environ.get("IG_PASSWORD", "")
+        self.session_id = session_id or os.environ.get("IG_SESSION_ID", "")
         self.max_posts_per_day = max_posts_per_day
         self.delay_min = delay_min
         self.delay_max = delay_max
@@ -174,6 +174,42 @@ class InstagramService:
 
         except Exception as e:
             logger.error(f"Failed to post reel: {e}")
+            return None
+
+    def post_photo(
+        self,
+        photo_path: str,
+        caption: str,
+        hashtags: list = None,
+    ) -> Optional[str]:
+        """Post a Photo to Instagram."""
+        if not self._logged_in:
+            logger.error("Not logged in to Instagram")
+            return None
+
+        if not self._check_rate_limit():
+            logger.warning(f"Rate limit reached ({self.max_posts_per_day} posts/day)")
+            return None
+
+        if not os.path.exists(photo_path):
+            logger.error(f"Photo file not found: {photo_path}")
+            return None
+
+        full_caption = caption or ""
+        if hashtags:
+            clean_tags = [f"#{h.strip('#')}" for h in hashtags if h.strip('#')]
+            if clean_tags:
+                full_caption = f"{full_caption}\n\n{' '.join(clean_tags[:15])}".strip()
+
+        try:
+            self._human_delay(min_s=5, max_s=15)
+            media = self.client.photo_upload(path=Path(photo_path), caption=full_caption)
+            self._posts_today += 1
+            ig_url = f"https://www.instagram.com/p/{media.code}/"
+            logger.info(f"Photo posted: {ig_url}")
+            return ig_url
+        except Exception as e:
+            logger.error(f"Failed to post photo: {e}")
             return None
 
     def post_story(
