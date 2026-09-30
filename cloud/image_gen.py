@@ -531,10 +531,18 @@ def generate_avatar(
             logger.warning(f"Both GPU backends offline — created local development avatar at {placeholder_path}")
             return placeholder_path
 
-    # Standardize to 1080x1920 (9:16 Instagram Reel standard)
+    # Standardize to 1080x1920 (9:16 Instagram Reel standard) & Apply 5-Step Photorealism
     img = Image.open(image_path)
     img_resized = img.resize((1080, 1920), Image.LANCZOS)
+
+    try:
+        from cloud.post_processor import run_full_post_pipeline
+        img_resized = run_full_post_pipeline(img_resized, enable_grain=True, enable_grade=True)
+    except Exception as pe:
+        logger.debug(f"Post-processor notice: {pe}")
+
     final_path = image_path.replace(".png", "_1080.png")
-    img_resized.save(final_path, quality=95)
+    img_resized.save(final_path, quality=98)
 
     return final_path
+

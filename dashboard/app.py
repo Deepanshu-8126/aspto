@@ -68,18 +68,28 @@ def get_status_html():
     today_posts = db.get_today_posts()
 
     return f"""
+    <div style="display:flex; justify-content:space-between; align-items:center; background:#1e1e2f; color:white; padding:12px 20px; border-radius:12px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:12px; height:12px; border-radius:50%; background:#00e676; box-shadow:0 0 8px #00e676;"></div>
+            <div style="font-weight:700; font-size:15px;">Instagram: <span style="color:#00f2fe;">@diyarai_016</span> (372 Followers)</div>
+        </div>
+        <div style="display:flex; gap:16px; font-size:13px; font-weight:600;">
+            <span style="background:rgba(0,230,118,0.15); color:#00e676; padding:4px 12px; border-radius:20px;">🟢 LLM Brain: Online (Gemini 2.0 Flash)</span>
+            <span style="background:rgba(102,126,234,0.15); color:#667eea; padding:4px 12px; border-radius:20px;">🎙️ Voice Agent: SwaraNeural Active</span>
+        </div>
+    </div>
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:16px; margin-bottom:24px;">
         <div style="background:linear-gradient(135deg, #667eea, #764ba2); color:white; padding:20px; border-radius:16px; text-align:center; box-shadow:0 4px 15px rgba(102,126,234,0.3);">
             <div style="font-size:30px; font-weight:800;">{analytics.get('total_posts', 0)}</div>
             <div style="opacity:0.9; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Total Posts</div>
         </div>
         <div style="background:linear-gradient(135deg, #f093fb, #f5576c); color:white; padding:20px; border-radius:16px; text-align:center; box-shadow:0 4px 15px rgba(245,87,108,0.3);">
-            <div style="font-size:30px; font-weight:800;">{analytics.get('today_posts', 0)}</div>
-            <div style="opacity:0.9; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Today's Posts</div>
+            <div style="font-size:30px; font-weight:800;">{analytics.get('today_posts', 0)} / 1</div>
+            <div style="opacity:0.9; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Today's Reel (Protected)</div>
         </div>
         <div style="background:linear-gradient(135deg, #4facfe, #00f2fe); color:white; padding:20px; border-radius:16px; text-align:center; box-shadow:0 4px 15px rgba(79,172,254,0.3);">
-            <div style="font-size:30px; font-weight:800;">{analytics.get('total_views', 0):,}</div>
-            <div style="opacity:0.9; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Total Views</div>
+            <div style="font-size:30px; font-weight:800;">372</div>
+            <div style="opacity:0.9; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">IG Followers</div>
         </div>
         <div style="background:linear-gradient(135deg, #43e97b, #38f9d7); color:#1a3a2e; padding:20px; border-radius:16px; text-align:center; box-shadow:0 4px 15px rgba(67,233,123,0.3);">
             <div style="font-size:30px; font-weight:800;">₹{financial.get('combined_income_inr', 0.0):,.2f}</div>

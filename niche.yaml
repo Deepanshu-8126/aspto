@@ -1,0 +1,87 @@
+# ══════════════════════════════════════════════════════════════════════
+#  AI-INFLUENCER-OS — Diya Rai Master Niche Configuration
+#  Engine: alsk1992/instagram-ai-agent
+# ══════════════════════════════════════════════════════════════════════
+
+niche: "Indian Fashion & Mumbai Lifestyle Influencer"
+sub_topics:
+  - "Bandra & South Mumbai cafe aesthetics"
+  - "Chikankari kurtas & luxury ethnic fusion"
+  - "Modern chic styling & daily OOTD"
+  - "Candid lifestyle moments & morning routines"
+target_audience: "Gen-Z & millennial fashion enthusiasts and young professionals in India"
+commercial: true
+
+voice:
+  persona: "22-year-old charming, confident Mumbai girl Diya Rai. Warm, witty, effortless Hinglish."
+  tone:
+    - "relatable"
+    - "warm"
+    - "candid"
+    - "alluring"
+    - "Hinglish"
+  forbidden:
+    - "corporate speak"
+    - "hustle bro grind"
+    - "CGI words"
+    - "unrealistic claims"
+
+aesthetic:
+  palette:
+    - "#181822"
+    - "#f9f8f6"
+    - "#d99b64"
+    - "#e27c62"
+  heading_font: "Archivo Black"
+  body_font: "Inter"
+  film_strength: "medium"
+
+hashtags:
+  core:
+    - "#DiyaRai"
+    - "#MumbaiInfluencer"
+    - "#BandraVibes"
+    - "#IndianFashion"
+    - "#OOTDIndia"
+  growth:
+    - "#ChikankariKurta"
+    - "#EthnicAesthetic"
+    - "#MumbaiDiaries"
+    - "#GoldenHourVibes"
+    - "#DesiVibes"
+
+formats:
+  photo: 0.40
+  reel_ai: 0.30
+  carousel: 0.20
+  quote_card: 0.10
+
+stories:
+  story_photo: 0.40
+  story_quote: 0.30
+  story_video: 0.30
+
+schedule:
+  posts_per_day: 5
+  stories_per_day: 4
+  best_hours_utc:
+    - 3    # 08:30 IST
+    - 7    # 12:30 IST
+    - 11   # 16:30 IST
+    - 14   # 19:30 IST
+    - 16   # 21:30 IST
+
+human_mimic:
+  pre_post_scroll: true
+  post_cooldown: true
+  comment_reply_delay: true
+  first_comment_hashtags: true
+  typing_delays: true
+  caption_entropy_check: true
+  aspect_ratio_check: true
+  rotate_client: true
+
+safety:
+  require_review: false
+  dedup_hamming_threshold: 8
+  critic_min_score: 0.65

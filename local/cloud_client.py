@@ -169,3 +169,77 @@ class CloudClient:
         except Exception as e:
             logger.error(f"Generate-and-wait failed: {e}")
             return None
+
+    async def generate_photo(
+        self,
+        prompt: str,
+        lora_scale: float = 0.92,
+        guidance: float = 5.0,
+        output_dir: str = "output/images",
+    ) -> Optional[str]:
+        """
+        Generate a photorealistic Diya Rai image from Kaggle Gradio worker.
+        """
+        os.makedirs(output_dir, exist_ok=True)
+        if not self.base_url or "CHANGE_ME" in self.base_url:
+            self.base_url = os.environ.get("GPU_WORKER_URL", "").rstrip("/")
+
+        if not self.base_url:
+            logger.warning("No GPU_WORKER_URL configured")
+            return None
+
+        full_prompt = (
+            f"raw 8k candid color photo of diyarai young Indian woman, {prompt}, "
+            "extremely detailed expressive almond eyes, catchlights in eyes, "
+            "gorgeous soft plump rosy lips, naturally hydrated defined lips, slight alluring parted lips, "
+            "delicate slender hands, perfectly rendered fingers, clean manicured natural nails, "
+            "hyperrealistic skin pores, fine stray hairs, Sony A7R V 85mm f/1.4 lens, tack sharp focus on face"
+        )
+
+        try:
+            from gradio_client import Client
+            import shutil
+            import uuid
+
+            loop = asyncio.get_running_loop()
+
+            def _call_gradio():
+                c = Client(self.base_url)
+                try:
+                    return c.predict(full_prompt, float(lora_scale), float(guidance), api_name="/predict")
+                except Exception:
+                    return c.predict(full_prompt, float(lora_scale), api_name="/predict")
+
+            res = await loop.run_in_executor(None, _call_gradio)
+            if res:
+                img_path = None
+                if isinstance(res, (tuple, list)):
+                    for item in res:
+                        if isinstance(item, str) and os.path.exists(item):
+                            img_path = item
+                            break
+                        elif isinstance(item, dict) and item.get("path") and os.path.exists(item.get("path")):
+                            img_path = item.get("path")
+                            break
+                elif isinstance(res, str) and os.path.exists(res):
+                    img_path = res
+
+                if img_path:
+                    dest_path = os.path.join(output_dir, f"diya_{uuid.uuid4().hex[:8]}.png")
+                    try:
+                        from PIL import Image
+                        from cloud.post_processor import run_full_post_pipeline
+                        raw_pil = Image.open(img_path)
+                        processed_pil = run_full_post_pipeline(raw_pil, enable_grain=True, enable_grade=True)
+                        processed_pil.save(dest_path, quality=98)
+                    except Exception:
+                        shutil.copy2(img_path, dest_path)
+
+                    logger.info(f"✅ Generated ultra-photorealistic photo saved to {dest_path}")
+                    return dest_path
+
+        except Exception as e:
+            logger.error(f"Remote photo generation failed: {e}")
+            return None
+
+

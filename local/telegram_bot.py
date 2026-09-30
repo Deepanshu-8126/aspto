@@ -472,28 +472,85 @@ class TelegramBot:
 
     async def _handle_text_url(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
-        Auto-detects when the user sends a video or post URL (Instagram Reel, Shorts, Pinterest).
-        Triggers motion transfer with Diya Rai's face and sends review button.
+        Handles incoming text messages from admin:
+        1. URLs -> motion video extraction
+        2. Greetings -> personality response
+        3. Prompts / Outfit ideas -> direct Kaggle GPU render with [Post to Instagram] button
         """
         text = update.message.text or ""
         import re
         urls = re.findall(r"https?://[^\s]+", text)
-        if not urls:
+        if urls:
+            target_url = urls[0]
+            chat_id = update.effective_chat.id
+
+            await update.message.reply_text(
+                f"🎯 **Detected Motion Video Link!**\n🔗 `{target_url}`\n\n"
+                "💃 Extracting 133-point body skeleton...\n"
+                "👗 Rendering Diya Rai in outfit...\n"
+                "✨ Will send you 4K Reel preview here when ready!",
+                parse_mode="Markdown",
+            )
+
+            from actions.motion_extractor import add_custom_target
+            add_custom_target(url=target_url, dress="trending outfit", bg="mumbai aesthetic", topic="viral reel")
             return
 
-        target_url = urls[0]
-        chat_id = update.effective_chat.id
+        cleaned_text = text.strip()
+        lower_text = cleaned_text.lower()
 
-        await update.message.reply_text(
-            f"🎯 **Detected Motion Video Link!**\n🔗 `{target_url}`\n\n"
-            "💃 Extracting 133-point body skeleton...\n"
-            "👗 Rendering Diya Rai in outfit...\n"
-            "✨ Will send you 4K Reel preview here when ready!",
+        # Handle greetings
+        if lower_text in ("hi", "hello", "hey", "/start", "start", "/starr", "/help", "help"):
+            welcome_msg = (
+                "✨ **Hey Deepanshu! I'm Diya Rai.** 💕\n\n"
+                "Mai online hu aur ready hu! Tum mujhe:\n"
+                "1. 📸 **Koi bhi photoshoot prompt ya dress idea bhejo** (jaise: `wearing white chikankari kurta on balcony` ya `sitting in cafe in blazer`)\n"
+                "2. 🔗 **Koi Instagram Reel / Pinterest link bhejo**\n"
+                "3. Button dabakar **1-Click Instagram Post** karo!\n\n"
+                "Kuch bhi idea type karke bhejo, mai abhi render karti hu 👇"
+            )
+            await update.message.reply_text(welcome_msg, parse_mode="Markdown")
+            return
+
+        # Any other text is a prompt to render Diya Rai!
+        chat_id = update.effective_chat.id
+        status_msg = await update.message.reply_text(
+            f"🎨 **Diya Rai Photoshoot Generating...**\n\n"
+            f"📝 Idea: `{cleaned_text}`\n"
+            f"⏳ Kaggle GPU par render ho raha hai (~25-30s)...",
             parse_mode="Markdown",
         )
+        post_id = self.db.create_post(topic=cleaned_text, post_type="photo")
 
-        from actions.motion_extractor import add_custom_target
-        add_custom_target(url=target_url, dress="trending outfit", bg="mumbai aesthetic", topic="viral reel")
+        try:
+            photo_path = await self.cloud.generate_photo(cleaned_text)
+            if photo_path and os.path.exists(photo_path):
+                from actions.generate_script import generate_script_and_caption
+                copy = generate_script_and_caption(topic=cleaned_text, dress="chic outfit")
+                caption = f"{copy.get('caption', cleaned_text)}\n\n{' '.join(copy.get('hashtags', []))}"
+                self.db.update_post(post_id, video_path=photo_path, caption=caption, hashtags=json.dumps(copy.get("hashtags", [])), status="generated")
+                self._last_generated_video = photo_path
+
+                keyboard = InlineKeyboardMarkup([
+                    [
+                        InlineKeyboardButton("🚀 Post to Instagram", callback_data=f"post_{post_id}"),
+                        InlineKeyboardButton("❌ Discard", callback_data=f"discard_{post_id}"),
+                    ]
+                ])
+                with open(photo_path, "rb") as f:
+                    await context.bot.send_photo(
+                        chat_id=chat_id,
+                        photo=f,
+                        caption=f"✨ **Diya Rai Post Ready!**\n\n{caption}",
+                        reply_markup=keyboard,
+                    )
+                await status_msg.delete()
+            else:
+                await status_msg.edit_text("⚠️ Kaggle GPU worker response nahi de raha. Kaggle link check karo.")
+        except Exception as e:
+            logger.error(f"Text prompt generation error: {e}")
+            await status_msg.edit_text(f"❌ Error: {e}")
+
 
     async def _handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handles interactive inline button clicks [Post to Instagram] / [Discard]."""
@@ -511,20 +568,20 @@ class TelegramBot:
 
                 await query.edit_message_caption("📤 **Publishing directly to Instagram...**", parse_mode="Markdown")
 
-                # Publish video reel or photo
-                if media_path and media_path.endswith((".mp4", ".mov")):
-                    ig_url = self.instagram.post_reel(media_path, caption=caption, hashtags=hashtags)
-                else:
-                    ig_url = self.instagram.post_photo(media_path, caption=caption)
+                # Publish video reel or photo using 8-Feature Anti-Detection Bridge
+                from actions.instagram_bridge import InstagramAIAgentBridge
+                bridge = InstagramAIAgentBridge(self.instagram)
+                post_type = "reel" if media_path and media_path.endswith((".mp4", ".mov")) else "photo"
+                ig_url = bridge.publish_content_safely(media_path, caption=caption, hashtags=hashtags, post_type=post_type)
 
                 if ig_url:
                     self.db.update_post(post_id, ig_url=ig_url, status="posted")
                     await query.edit_message_caption(
-                        f"✅ **Published to Instagram!**\n\n🔗 [View on Instagram]({ig_url})",
+                        f"✅ **Published to Instagram via Anti-Detection Suite!**\n\n🔗 [View on Instagram]({ig_url})",
                         parse_mode="Markdown",
                     )
                 else:
-                    await query.edit_message_caption("⚠️ Instagram credentials not set yet in `config/config.yaml`.", parse_mode="Markdown")
+                    await query.edit_message_caption("⚠️ Instagram upload check failed. Ensure session cookies are active in `.env`.", parse_mode="Markdown")
 
         elif data.startswith("discard_"):
             post_id = int(data.split("_")[1])

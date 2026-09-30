@@ -150,12 +150,15 @@ class PostScheduler:
 
             self.db.update_post(post_id, caption=caption, hashtags=json.dumps(hashtags))
 
-            # Post to Instagram
-            ig_url = self.instagram.post_reel(video_path, caption, hashtags)
+            # Post to Instagram using 8-Feature Anti-Detection Bridge
+            from actions.instagram_bridge import InstagramAIAgentBridge
+            bridge = InstagramAIAgentBridge(self.instagram)
+            post_type = "photo" if video_path.lower().endswith((".png", ".jpg", ".jpeg")) else "reel"
+            ig_url = bridge.publish_content_safely(video_path, caption, hashtags, post_type=post_type)
 
             if ig_url:
                 self.db.update_post(post_id, ig_url=ig_url, status="posted")
-                logger.info(f"✅ Auto-posted: {ig_url}")
+                logger.info(f"✅ Auto-posted via anti-detection layer: {ig_url}")
             else:
                 self.db.update_post(post_id, status="failed")
                 logger.error("Instagram posting failed")

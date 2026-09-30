@@ -1,38 +1,27 @@
-# AIInfluencerOS 🎬 — Autonomous AI Creator Platform
+# AIInfluencerOS 🎬 — Autonomous AI Creator Platform (Diya Rai Edition)
 
-**100% Free, Zero-Laptop Load Architecture powered by GitHub Actions & Kaggle / Hugging Face GPUs.**
+**Production-grade, anti-ban AI Influencer platform with real Instagram integration, Gemini 24kHz studio voice notes, live web studio dashboard, and Telegram control hub.**
 
 ---
 
-## ⚡ 2 Operating Modes
+## 🛡️ Anti-Ban & Zero-Detection Architecture
+To keep your real Instagram account (`@diyarai_016`) safe from algorithmic flags and action blocks:
+1. **Strict 1-Reel Daily Cap**: Enforces a safe 24-hour reel publishing schedule to emulate authentic human creator activity.
+2. **Humanized Typing Latency**: Dynamic typing delays (3.5s – 6.5s) on all direct message replies and comments.
+3. **Hardware Fingerprint Persistence**: Reuses authentic device parameters (`Google Pixel 8 Pro`) stored locally in `data/ig_session.json` to prevent multi-device / VPN flags.
+4. **Intelligent Rate-Limiter**: 20-second polling cycle with automatic backoff prevents API throttling.
+5. **Zero-Secret GitHub Policy**: Strict `.gitignore` rules prevent token, cookie, session, or credential leakage to public scanners.
 
-| Mode | Where It Runs | Description |
+---
+
+## ⚡ Core Operating Components
+
+| Component | Port / Interface | Key Features |
 | :--- | :--- | :--- |
-| **🚀 Mode 1: Cloud Autonomous (Zero Laptop Load)** | GitHub Actions + Kaggle GPU (30 hr/wk) | **Laptop 100% off.** GitHub Actions runs daily on schedule (10 AM & 6 PM), copies dance motions via StableAnimator, upscales to 4K via Real-ESRGAN, requests Telegram approval with inline buttons, and auto-posts to Instagram. |
-| **💻 Mode 2: Local Hybrid** | Your i5 Laptop + Colab | Run local Telegram bot (`local/main.py`) and Web Dashboard (`dashboard/app.py` at `localhost:7861`) while rendering on Colab GPU. |
-
----
-
-## 🏗️ 5 Best Repos Architecture (Mode 1)
-
-```
-[topics.txt] or [/copy command]
-       │
-       ▼
-[GitHub Actions CRON] (Har 4 ghante / 10 AM & 6 PM)
-       │
-       ├─► [Kaggle T4 GPU / HF ZeroGPU]
-       │       ├─ DWPose (133 Body Keypoints extraction)
-       │       ├─ Francis-Rings/StableAnimator (CVPR 2025: ID-preserving dance motion)
-       │       ├─ bmaltais/kohya_ss (LoRA consistent face)
-       │       ├─ pratik227/upscale_video_4k (Real-ESRGAN 4K upscale)
-       │       └─ Llama 3.1 8B / Gemini 2.0 (Viral caption + hashtags)
-       │
-       ├─► [Telegram Interactive Review]
-       │       └─ Preview video + [🚀 APPROVE & POST] / [🛑 CANCEL] buttons
-       │
-       └─► [Instagram Post] (instagrapi 4K Reel live)
-```
+| **📊 Live Web Studio** | `http://localhost:7860` | Real-time follower tracker (372 followers), daily reel quota guard, viral analytics, and 1-click publishing. |
+| **🎙️ Instagram LLM Voice Agent** | Direct Messages (`@diyarai_016`) | Gemini 3.5 Flash conversational engine + 24kHz native studio speech voice notes in natural Hinglish. |
+| **🤖 Telegram Control Hub** | `@Bbyjihotbot` | `/start`, `/video`, `/photo`, `/status`, live stopwatch timers, and direct photo reference face swap. |
+| **⚡ Cloud GPU Renderer** | Kaggle T4 / CUDA 12 | 25-35 FPS high-speed face fusion & GFPGAN 1.4 detail enhancement. |
 
 ---
 

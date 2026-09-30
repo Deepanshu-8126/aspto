@@ -4,38 +4,76 @@ __pycache__/
 *$py.class
 *.so
 
-# Environments
+# Environments & Secrets (CRITICAL: NEVER COMMIT CREDENTIALS)
 .env
 .venv
 env/
 venv/
 ENV/
+kaggle.json
+*.pem
+*.key
 
-# Data & local databases (Keep directories with .gitkeep)
+# Data & local databases (Anti-Ban: Protect Instagram Sessions & Device Hardware)
 data/*.db
 data/backups/
 data/qdrant_db/
 data/ig_session.json
+data/device.json
 data/token.json
+data/sessions/
+data/media/
+data/ideas/
+data/*.jpg
+data/*.jpeg
+data/*.png
 !data/.gitkeep
 
-# Heavy Model weights (Store in HF / Drive / Kaggle)
+# Heavy Model weights & Base64 Dumps
 *.safetensors
 models/voice/*.wav
 *.ckpt
 *.pt
 *.bin
+*.b64
+*_b64.txt
+diya_master_b64.txt
 !models/lora/.gitkeep
 !models/voice/.gitkeep
 
-# Rendered outputs
+# Rendered outputs & Media
 output/
 kaggle_output/
+kaggle_logs/
+kaggle_pulled/
+ig_agent_upstream/
 *.mp4
 *.wav
+*.mp3
 *.png
+*.jpg
+*.jpeg
+!diya/diya_reference.jpg
 !spaces/**/*.png
 !dashboard/**/*.png
+
+# Temporary & Local Scratch Scripts
+apply_user_facefusion.py
+build_200pct_notebook.py
+build_deepanshu_fusion.py
+build_pro_fusion.py
+build_video_master.py
+create_facefusion_notebook.py
+create_ferrari_notebook.py
+make_clean_notebook.py
+make_minimal_lora_notebook.py
+make_perfect_main_model.py
+scratch_test_gradio.py
+send_real_reply.py
+test_live_instagram_post.py
+actions/login_helper_headful.py
+actions/playwright_ig_login.py
+deepanshu_fusion_adv.ipynb
 
 # OS & IDE
 .DS_Store

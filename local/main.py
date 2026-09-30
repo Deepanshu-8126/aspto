@@ -65,11 +65,12 @@ def init_services(config: dict, personality: dict):
     logger.info("✅ Database initialized")
 
     # Cloud Client
+    gpu_worker_url = os.environ.get("GPU_WORKER_URL") or config.get("cloud", {}).get("gradio_url", "")
     cloud_client = CloudClient(
-        gradio_url=config["cloud"]["gradio_url"],
-        timeout=config["cloud"]["timeout"],
-        retry_attempts=config["cloud"]["retry_attempts"],
-        retry_delay=config["cloud"]["retry_delay"],
+        gradio_url=gpu_worker_url,
+        timeout=config.get("cloud", {}).get("timeout", 900),
+        retry_attempts=config.get("cloud", {}).get("retry_attempts", 3),
+        retry_delay=config.get("cloud", {}).get("retry_delay", 30),
     )
     logger.info("✅ Cloud client initialized")
 
