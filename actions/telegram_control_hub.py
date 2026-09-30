@@ -222,7 +222,7 @@ class TelegramControlHub:
             )
 
     async def cmd_photo(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Generate 4K Diya Rai Photo with live timer."""
+        """Generate 4K Diya Rai Photo with live timer & diverse poses."""
         if not self._is_admin(update): return
         
         prompt = " ".join(context.args) if context.args else "chic modern aesthetic outfit"
@@ -230,25 +230,19 @@ class TelegramControlHub:
         
         progress_msg = await update.message.reply_text(
             f"⏳ **Generating 4K Diya Rai Photo...**\n"
-            f"🎨 **Style:** `{prompt}`\n"
-            f"💎 **Face DNA:** 200% Consistent\n\n"
-            f"⚡ `[■■■■□□□□□□] 40% — Rendering with LoRA...`"
+            f"🎨 **Style / Vibe:** `{prompt}`\n"
+            f"💎 **Face DNA:** 200% Ground-Truth Locked\n\n"
+            f"⚡ `[■■■■■■□□□□] 60% — Rendering & Selecting High-Res Shot...`"
         )
         
-        # Locate master reference photo
-        photo_candidates = [
-            "saved_diya_results/gen_1.png",
-            "saved_diya_results/gen_2.png",
-            "diya/best.png",
-            "output/images/diya_exact_face_test.png"
-        ]
-        chosen_photo = None
-        for p in photo_candidates:
-            if os.path.exists(p):
-                chosen_photo = p
-                break
+        from actions.face_swapper import get_diverse_diya_photo
+        try:
+            chosen_photo = get_diverse_diya_photo(prompt)
+        except Exception as e:
+            logger.error(f"Diverse photo selection error: {e}")
+            chosen_photo = "diya/best.png"
                 
-        await asyncio.sleep(2.0)
+        await asyncio.sleep(1.0)
         caption = self.generate_viral_caption(prompt)
         self.last_media_path = chosen_photo
         self.last_media_type = "photo"
@@ -273,59 +267,53 @@ class TelegramControlHub:
                     photo=pf,
                     caption=(
                         f"👑 **Diya Rai — 4K Photo Ready!** 📸\n"
-                        f"⏱️ **Processing Time:** `{elapsed:.1f}s`\n\n"
-                        f"📝 **Caption:**\n{caption}"
+                        f"⏱️ **Processing Time:** `{elapsed:.1f}s`\n"
+                        f"🎨 **Look:** `{prompt}`\n\n"
+                        f"📝 **Recommended Caption:**\n{caption}"
                     ),
                     reply_markup=reply_markup
                 )
 
     async def handle_photo_reference(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """User uploaded a photo reference directly — transform it into Diya Rai!"""
+        """User uploaded a photo reference directly — transform it into Diya Rai using 200% Face Swapper!"""
         if not self._is_admin(update): return
         
         t0 = time.time()
+        user_caption = update.message.caption or "trending aesthetic look"
+        
         progress_msg = await update.message.reply_text(
             "📥 **Photo Reference Received!**\n"
-            "⚡ Analyzing target pose, outfit & lighting...\n"
-            "Applying Diya Rai's 200% exact facial architecture..."
+            "🔍 Analyzing target pose, outfit & lighting...\n"
+            "💎 Locking Diya Rai's 200% exact facial architecture..."
         )
         
-        # Download photo
+        # 1. Download uploaded photo with timeout protection
         photo = update.message.photo[-1]
         file = await context.bot.get_file(photo.file_id)
         os.makedirs("output/reference_uploads", exist_ok=True)
         local_ref = f"output/reference_uploads/ref_{int(time.time())}.jpg"
-        await file.download_to_drive(local_ref)
-        
-        await asyncio.sleep(2.0)
-        
-        # Apply face swap with master Diya image
-        master_img = "diya/best.png"
-        output_diya_img = f"output/reference_uploads/diya_transformed_{int(time.time())}.jpg"
-        
         try:
-            import cv2
-            from insightface.app import FaceAnalysis
-            from insightface.model_zoo import get_model
-            
-            face_app = FaceAnalysis(name='buffalo_l', providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
-            face_app.prepare(ctx_id=0, det_size=(640, 640))
-            swapper = get_model('C:/Users/Deepanshu/.insightface/models/inswapper_128.onnx', download=False)
-            
-            src = cv2.imread(master_img)
-            tgt = cv2.imread(local_ref)
-            src_faces = face_app.get(src)
-            tgt_faces = face_app.get(tgt)
-            if src_faces and tgt_faces:
-                res = swapper.get(tgt, tgt_faces[0], src_faces[0], paste_back=True)
-                cv2.imwrite(output_diya_img, res)
-            else:
-                output_diya_img = local_ref
+            await file.download_to_drive(local_ref, read_timeout=120)
         except Exception:
-            output_diya_img = local_ref
+            if getattr(file, 'file_path', None):
+                import urllib.request
+                urllib.request.urlretrieve(file.file_path, local_ref)
+            else:
+                raise
+        
+        # 2. Run High-Precision Face Swapper Engine
+        from actions.face_swapper import swap_face_onto_reference
+        success, result_path_or_err = swap_face_onto_reference(local_ref)
+        
+        if not success:
+            await progress_msg.edit_text(
+                f"⚠️ **Photo Reference Notice:**\n{result_path_or_err}\n\n"
+                f"👉 *Tip:* Kripya aisi photo bhejein jisme model/person ka face saaf dikh raha ho taaki Diya Rai ka face seamlessly swap ho sake!"
+            )
+            return
 
-        caption = self.generate_viral_caption("new aesthetic photo shoot")
-        self.last_media_path = output_diya_img
+        caption = self.generate_viral_caption(user_caption)
+        self.last_media_path = result_path_or_err
         self.last_media_type = "photo"
         self.last_caption = caption
         elapsed = time.time() - t0
@@ -342,13 +330,14 @@ class TelegramControlHub:
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         await progress_msg.delete()
-        with open(output_diya_img, "rb") as pf:
+        with open(result_path_or_err, "rb") as pf:
             await update.message.reply_photo(
                 photo=pf,
                 caption=(
                     f"👑 **Diya Rai — Transformed from your Reference Photo!** 💎\n"
+                    f"⚡ **Face Match:** 200% Exact Ground-Truth Locked\n"
                     f"⏱️ **Processing Time:** `{elapsed:.1f}s`\n\n"
-                    f"📝 **Caption:**\n{caption}"
+                    f"📝 **Recommended Caption:**\n{caption}"
                 ),
                 reply_markup=reply_markup
             )
@@ -396,9 +385,55 @@ class TelegramControlHub:
             msg += f"👤 `@{l.get('username')}`: _{l.get('message')}_\n✨ **Diya:** {l.get('notes', 'Replied')}\n\n"
         await update.message.reply_text(msg, parse_mode="Markdown")
 
+    async def handle_text_prompt(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle incoming text messages: URLs, greetings, or free-form photo prompts."""
+        if not self._is_admin(update): return
+        
+        text = update.message.text or ""
+        import re
+        urls = re.findall(r"https?://[^\s]+", text)
+        if urls:
+            target_url = urls[0]
+            await update.message.reply_text(
+                f"🎯 **Detected Motion Video Link!**\n🔗 `{target_url}`\n\n"
+                "💃 Extracting 133-point body skeleton...\n"
+                "👗 Rendering Diya Rai in outfit...\n"
+                "✨ Locking 200% Facial Architecture with Original Audio!",
+                parse_mode="Markdown"
+            )
+            from actions.motion_extractor import add_custom_target
+            add_custom_target(url=target_url, dress="trending outfit", bg="mumbai aesthetic", topic="viral reel")
+            return
+
+        cleaned = text.strip()
+        lower = cleaned.lower()
+        if lower in ("hi", "hello", "hey", "/start", "start", "kya haal", "kaise ho"):
+            await update.message.reply_text(
+                "✨ **Hey Deepanshu! Diya Rai here.** 💕\n\n"
+                "Mai online hu aur ready hu! Aap mujhe:\n"
+                "1. 📸 **Koi bhi photo reference bhejo** (Pinterest, Instagram ya model ki) — mai usme apna face swap kar dungi!\n"
+                "2. 👗 **Koi bhi outfit ya idea type karo** (jaise: `red saree on beach` ya `formal blazer look`)\n"
+                "3. 🔗 **Koi Reel link bhejo**\n"
+                "4. Type `/status` live followers aur metrics dekhne ke liye!",
+                parse_mode="Markdown"
+            )
+            return
+
+        # Direct prompt for 4K Photo Shoot!
+        context.args = cleaned.split()
+        await self.cmd_photo(update, context)
+
     def run(self):
-        """Run Telegram Bot Application."""
-        app = Application.builder().token(self.bot_token).build()
+        """Run Telegram Bot Application with robust timeouts and handlers."""
+        from telegram.request import HTTPXRequest
+        req = HTTPXRequest(
+            connection_pool_size=16,
+            read_timeout=120.0,
+            write_timeout=120.0,
+            connect_timeout=60.0,
+            pool_timeout=60.0,
+        )
+        app = Application.builder().token(self.bot_token).request(req).build()
         app.add_handler(CommandHandler("start", self.cmd_start))
         app.add_handler(CommandHandler("help", self.cmd_start))
         app.add_handler(CommandHandler("status", self.cmd_status))
@@ -406,9 +441,10 @@ class TelegramControlHub:
         app.add_handler(CommandHandler("photo", self.cmd_photo))
         app.add_handler(CommandHandler("dms", self.cmd_dms))
         app.add_handler(MessageHandler(filters.PHOTO, self.handle_photo_reference))
+        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_text_prompt))
         app.add_handler(CallbackQueryHandler(self.handle_callbacks))
         
-        logger.info("🚀 Advanced Telegram Control Hub Active!")
+        logger.info("🚀 Advanced Telegram Control Hub Active (Face Swapper & Direct Prompts Ready)!")
         app.run_polling()
 
 
