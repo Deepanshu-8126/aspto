@@ -24,12 +24,14 @@ class InstagramService:
         self,
         username: str,
         password: str,
+        session_id: str = "",
         max_posts_per_day: int = 5,
         delay_min: int = 60,
         delay_max: int = 300,
     ):
         self.username = username
         self.password = password
+        self.session_id = session_id
         self.max_posts_per_day = max_posts_per_day
         self.delay_min = delay_min
         self.delay_max = delay_max
@@ -40,6 +42,18 @@ class InstagramService:
 
     def login(self, session_path: str = "data/ig_session.json") -> bool:
         """Login to Instagram with session caching and auto-recovery."""
+        # 1. Direct login by session_id cookie (immune to out-of-date checks)
+        if self.session_id and self.session_id != "CHANGE_ME":
+            try:
+                self.client.login_by_sessionid(self.session_id)
+                os.makedirs(os.path.dirname(session_path), exist_ok=True)
+                self.client.dump_settings(session_path)
+                logger.info("Instagram: Logged in successfully via session_id")
+                self._logged_in = True
+                return True
+            except Exception as e:
+                logger.warning(f"session_id login notice: {e}")
+
         if not self.username or self.username == "CHANGE_ME" or not self.password or self.password == "CHANGE_ME":
             logger.warning("Instagram credentials not configured ('CHANGE_ME') — skipping login")
             self._logged_in = False

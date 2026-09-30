@@ -11,8 +11,10 @@ gemini:
 
 # ── Instagram (instagrapi) ──
 instagram:
-  username: "CHANGE_ME"
-  password: "CHANGE_ME"
+  username: "diyarai_016"
+  password: "Diya12!"
+  session_id: ""                  # optional browser sessionid cookie (100% bypasses checks)
+  mode: "on_demand"               # "on_demand" (jab tera mood ho) ya "automatic"
   max_posts_per_day: 5
   human_delay_min: 60             # seconds between actions
   human_delay_max: 300
