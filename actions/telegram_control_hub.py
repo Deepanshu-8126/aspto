@@ -246,6 +246,29 @@ class TelegramControlHub:
         )
         await update.message.reply_text(msg, parse_mode="Markdown")
 
+    async def cmd_gpu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Check Kaggle GPU Worker status and trigger/restart."""
+        if not await self._check_or_prompt_admin(update): return
+        import subprocess
+        try:
+            r = subprocess.run(["kaggle", "kernels", "status", "ukboy7u787/diya-rai-cloud-gpu-worker"], capture_output=True, text=True, timeout=10)
+            status_text = r.stdout.strip() or r.stderr.strip()
+        except Exception as e:
+            status_text = str(e)
+
+        current_url = os.environ.get("GPU_WORKER_URL", "None")
+        msg = (
+            "⚡ **KAGGLE CLOUD GPU WORKER (Free 30h/week)**\n"
+            "───────────────────────────\n"
+            f"💻 **Kernel:** `ukboy7u787/diya-rai-cloud-gpu-worker`\n"
+            f"🔄 **Cloud Status:** `{status_text}`\n"
+            f"🌐 **Current Worker URL:** `{current_url}`\n"
+            "🎬 **Engine:** Wan2.1 Video + SDXL 8K Studio\n"
+            "───────────────────────────\n"
+            "👉 *Tip:* Jab worker online aayega, Gradio URL yahan automatically send ho jayega!"
+        )
+        await update.message.reply_text(msg, parse_mode="Markdown")
+
     async def cmd_video(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Generate high-accuracy reel with live progress timer."""
         if not await self._check_or_prompt_admin(update): return
@@ -672,6 +695,217 @@ class TelegramControlHub:
                 reply_markup=reply_markup
             )
 
+    async def cmd_convert(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Command /convert or /generate <Instagram_URL>"""
+        if not await self._check_or_prompt_admin(update): return
+        text = update.message.text or ""
+        import re
+        urls = re.findall(r"https?://[^\s]+", text)
+        if not urls:
+            await update.message.reply_text(
+                "👉 **Instagram Link Conversion:**\n"
+                "`/convert https://www.instagram.com/reel/XXXXX`\n\n"
+                "Ya direct chat me Instagram reel/photo ka link bhej do!",
+                parse_mode="Markdown"
+            )
+            return
+        asyncio.create_task(self.process_instagram_url(update, urls[0], text))
+
+    async def process_instagram_url(self, update: Update, target_url: str, user_prompt: str = ""):
+        """Non-blocking background pipeline: downloads IG media, swaps into Diya Rai, and sends with live 0-100% progress."""
+        t0 = time.time()
+        loop = asyncio.get_event_loop()
+        
+        self.processing_status = "processing"
+        self.processing_what = f"Converting Instagram link into Diya Rai: {target_url}"
+        
+        STEPS = [
+            "📥 Instagram se media download ho raha hai...",
+            "🎞️ Media format & frames analyze ho rahe hain...",
+            "🔍 Face & landmarks detect ho rahe hain...",
+            "💎 Diya Rai Ground-Truth DNA lock ho raha hai...",
+            "🔄 Face Swap & GFPGAN Ultra-HD restoration...",
+            "🎵 Original Audio & Video synchronize ho rahe hain...",
+            "📝 Viral Instagram Caption generate ho raha hai...",
+            "✅ Diya Rai Model conversion complete!",
+        ]
+        
+        progress_msg = await update.message.reply_text(
+            f"🎯 **Instagram Media Detected!**\n"
+            f"🔗 `{target_url}`\n\n"
+            f"⚡ `[□□□□□□□□□□] 0%`\n"
+            f"🔄 **Diya Rai Model conversion shuru ho raha hai...**\n"
+            f"⏱️ Elapsed: `0.0s`",
+            parse_mode="Markdown"
+        )
+        
+        # Step 1: Download asynchronously
+        await self._live_progress(progress_msg, STEPS, 1, time.time() - t0)
+        os.makedirs("output/reference_uploads", exist_ok=True)
+        base_id = int(time.time())
+        out_template = os.path.join("output", "reference_uploads", f"ig_{base_id}.%(ext)s")
+        
+        def _do_download():
+            import subprocess, glob
+            # Try yt-dlp first
+            cmd = [
+                "yt-dlp",
+                "--no-playlist",
+                "-o", out_template,
+                "--max-filesize", "100M",
+                target_url
+            ]
+            try:
+                subprocess.run(cmd, capture_output=True, text=True, timeout=90, check=True)
+                base = os.path.join("output", "reference_uploads", f"ig_{base_id}")
+                matches = glob.glob(base + ".*")
+                if matches:
+                    return matches[0]
+            except Exception as e:
+                logger.warning(f"yt-dlp download failed: {e}")
+            
+            # Fallback to instagrapi
+            try:
+                from actions.instagram_publisher import get_instagram_client
+                cl = get_instagram_client()
+                if cl:
+                    media_pk = cl.media_pk_from_url(target_url)
+                    media = cl.media_info(media_pk)
+                    folder = os.path.join("output", "reference_uploads")
+                    if media.media_type == 1:
+                        return str(cl.photo_download(media_pk, folder=folder))
+                    elif media.media_type == 2:
+                        return str(cl.video_download(media_pk, folder=folder))
+                    elif media.media_type == 8:
+                        return str(cl.album_download(media_pk, folder=folder)[0])
+            except Exception as e2:
+                logger.warning(f"instagrapi download fallback failed: {e2}")
+            return None
+
+        downloaded_file = await loop.run_in_executor(None, _do_download)
+        
+        if not downloaded_file or not os.path.exists(downloaded_file):
+            self.processing_status = "idle"
+            await progress_msg.edit_text(
+                f"❌ **Instagram media download nahi ho paya.**\n"
+                f"👉 Link check karo ya video/photo direct chat me send kar do!"
+            )
+            return
+
+        is_video = downloaded_file.lower().endswith((".mp4", ".mov", ".mkv", ".webm"))
+        
+        if is_video:
+            # Video pipeline
+            await self._live_progress(progress_msg, STEPS, 2, time.time() - t0)
+            import cv2
+            cap = cv2.VideoCapture(downloaded_file)
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            fps = cap.get(cv2.CAP_PROP_FPS) or 30
+            cap.release()
+            
+            await self._live_progress(progress_msg, STEPS, 3, time.time() - t0)
+            await asyncio.sleep(0.3)
+            await self._live_progress(progress_msg, STEPS, 4, time.time() - t0)
+            
+            from actions.face_swapper import swap_face_in_video
+            out_video = os.path.join("output", "reference_transformed", f"diya_ig_reel_{base_id}.mp4")
+            
+            # Run video face swap in executor
+            await self._live_progress(progress_msg, STEPS, 5, time.time() - t0)
+            success, res_path = await loop.run_in_executor(None, swap_face_in_video, downloaded_file, out_video)
+            
+            if not success:
+                self.processing_status = "idle"
+                await progress_msg.edit_text(f"⚠️ **Video Face Swap Issue:**\n`{res_path}`")
+                return
+                
+            await self._live_progress(progress_msg, STEPS, 6, time.time() - t0)
+            await asyncio.sleep(0.3)
+            await self._live_progress(progress_msg, STEPS, 7, time.time() - t0)
+            
+            caption = self.generate_viral_caption(user_prompt or "trending dance viral reel")
+            self.last_media_path = res_path
+            self.last_media_type = "video"
+            self.last_caption = caption
+            elapsed = time.time() - t0
+            
+            await self._live_progress(progress_msg, STEPS, 8, elapsed)
+            await asyncio.sleep(0.5)
+            
+            keyboard = [
+                [
+                    InlineKeyboardButton("🚀 Post Reel to Instagram", callback_data="post_media"),
+                    InlineKeyboardButton("🔄 New Caption", callback_data="regen_caption"),
+                ],
+                [
+                    InlineKeyboardButton("❌ Discard", callback_data="discard_media")
+                ]
+            ]
+            await progress_msg.delete()
+            with open(res_path, "rb") as vf:
+                await update.message.reply_video(
+                    video=vf,
+                    caption=(
+                        f"👑 **Diya Rai — Reel Transformed & Ready!** 🎬\n"
+                        f"⚡ **Face Match:** Ground-Truth Multi-Anchor Fused DNA\n"
+                        f"🎞️ **Frames:** `{total_frames}` @ `{fps:.0f}fps`\n"
+                        f"🎵 **Audio:** Original Music Synced\n"
+                        f"⏱️ **Total Time:** `{elapsed:.1f}s`\n\n"
+                        f"📝 **Caption:**\n{caption}"
+                    ),
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+        else:
+            # Photo pipeline
+            await self._live_progress(progress_msg, STEPS, 3, time.time() - t0)
+            await self._live_progress(progress_msg, STEPS, 4, time.time() - t0)
+            await self._live_progress(progress_msg, STEPS, 5, time.time() - t0)
+            
+            from actions.face_swapper import swap_face_onto_reference
+            out_photo = os.path.join("output", "reference_transformed", f"diya_ig_photo_{base_id}.jpg")
+            success, res_path = await loop.run_in_executor(None, swap_face_onto_reference, downloaded_file, out_photo)
+            
+            if not success:
+                self.processing_status = "idle"
+                await progress_msg.edit_text(f"⚠️ **Photo Face Swap Issue:**\n`{res_path}`")
+                return
+                
+            await self._live_progress(progress_msg, STEPS, 6, time.time() - t0)
+            await self._live_progress(progress_msg, STEPS, 7, time.time() - t0)
+            
+            caption = self.generate_viral_caption(user_prompt or "trending aesthetic look")
+            self.last_media_path = res_path
+            self.last_media_type = "photo"
+            self.last_caption = caption
+            elapsed = time.time() - t0
+            
+            await self._live_progress(progress_msg, STEPS, 8, elapsed)
+            await asyncio.sleep(0.5)
+            
+            keyboard = [
+                [
+                    InlineKeyboardButton("🚀 Post to Instagram", callback_data="post_media"),
+                    InlineKeyboardButton("🔄 New Caption", callback_data="regen_caption"),
+                ],
+                [
+                    InlineKeyboardButton("❌ Discard", callback_data="discard_media")
+                ]
+            ]
+            await progress_msg.delete()
+            with open(res_path, "rb") as pf:
+                await update.message.reply_photo(
+                    photo=pf,
+                    caption=(
+                        f"👑 **Diya Rai — Photo Transformed & Ready!** 📸\n"
+                        f"⚡ **Face:** Ground-Truth Fused DNA + GFPGAN Ultra-HD\n"
+                        f"⏱️ **Time:** `{elapsed:.1f}s`\n\n"
+                        f"📝 **Caption:**\n{caption}"
+                    ),
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+
+        self.processing_status = "idle"
+
     async def handle_text_prompt(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle incoming text messages: URLs, greetings, or free-form photo prompts."""
         if not await self._check_or_prompt_admin(update): return
@@ -681,52 +915,8 @@ class TelegramControlHub:
         urls = re.findall(r"https?://[^\s]+", text)
         if urls:
             target_url = urls[0]
-            progress_msg = await update.message.reply_text(
-                f"🎯 **Detected Reel Link!**\n🔗 `{target_url}`\n\n"
-                "📥 Downloading video and extracting music...\n"
-                "✨ Locking 200% Facial Architecture with Original Audio!",
-                parse_mode="Markdown"
-            )
-            os.makedirs("output/reference_uploads", exist_ok=True)
-            download_out = f"output/reference_uploads/url_reel_{int(time.time())}.mp4"
-            import subprocess
-            dl_cmd = ["yt-dlp", "-f", "mp4", "-o", download_out, "--max-filesize", "50M", target_url]
-            try:
-                subprocess.run(dl_cmd, capture_output=True, text=True, check=True)
-                if os.path.exists(download_out):
-                    from actions.face_swapper import swap_face_in_video
-                    await progress_msg.edit_text("⚡ `[■■■■■□□□□□] 50% — Swapping Face with Diya Rai...`")
-                    success, res_path = swap_face_in_video(download_out)
-                    if success:
-                        caption = self.generate_viral_caption("trending dance reel")
-                        self.last_media_path = res_path
-                        self.last_media_type = "video"
-                        self.last_caption = caption
-                        keyboard = [
-                            [
-                                InlineKeyboardButton("🚀 Post Reel to Instagram", callback_data="post_media"),
-                                InlineKeyboardButton("🔄 New Caption", callback_data="regen_caption"),
-                            ],
-                            [
-                                InlineKeyboardButton("❌ Discard", callback_data="discard_media")
-                            ]
-                        ]
-                        await progress_msg.delete()
-                        with open(res_path, "rb") as vf:
-                            await update.message.reply_video(
-                                video=vf,
-                                caption=(
-                                    f"👑 **Diya Rai — Transformed Reel Ready!** 🎬\n\n"
-                                    f"📝 **Caption:**\n{caption}"
-                                ),
-                                reply_markup=InlineKeyboardMarkup(keyboard)
-                            )
-                        return
-            except Exception as e:
-                logger.error(f"URL reel gen error: {e}")
-
-            from actions.motion_extractor import add_custom_target
-            add_custom_target(url=target_url, dress="trending outfit", bg="mumbai aesthetic", topic="viral reel")
+            # Asynchronous non-blocking background task
+            asyncio.create_task(self.process_instagram_url(update, target_url, text))
             return
 
         cleaned = text.strip()
@@ -766,6 +956,9 @@ class TelegramControlHub:
         app.add_handler(CommandHandler("status", self.cmd_status))
         app.add_handler(CommandHandler("activity", self.cmd_activity))
         app.add_handler(CommandHandler("log", self.cmd_activity))
+        app.add_handler(CommandHandler("gpu", self.cmd_gpu))
+        app.add_handler(CommandHandler("convert", self.cmd_convert))
+        app.add_handler(CommandHandler("generate", self.cmd_convert))
         app.add_handler(CommandHandler("video", self.cmd_video))
         app.add_handler(CommandHandler("photo", self.cmd_photo))
         app.add_handler(CommandHandler("dms", self.cmd_dms))

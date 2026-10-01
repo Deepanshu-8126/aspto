@@ -75,9 +75,15 @@ actions/login_helper_headful.py
 actions/playwright_ig_login.py
 deepanshu_fusion_adv.ipynb
 
+# Heavy models & onnx
+*.onnx
+kaggle_run_model/logs/
+kaggle_dataset_upload/
+
 # OS & IDE
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 *.log
+

@@ -1,14 +1,17 @@
 {
   "id": "ukboy7u787/diya-rai-cloud-gpu-worker",
   "title": "Diya Rai Cloud GPU Worker",
-  "code_file": "diya_cloud_worker.py",
+  "code_file": "diya_gpu_master.py",
   "language": "python",
   "kernel_type": "script",
   "is_private": "true",
   "enable_gpu": "true",
   "enable_tpu": "false",
   "enable_internet": "true",
-  "dataset_sources": [],
+  "dataset_sources": [
+    "ukboy7u787/diya-model-identity",
+    "ukboy7u787/diya-b"
+  ],
   "competition_sources": [],
   "kernel_sources": [],
   "model_sources": []

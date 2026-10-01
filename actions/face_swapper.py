@@ -16,13 +16,85 @@ logger = logging.getLogger("face_swapper")
 
 MODELS_DIR = "C:/Users/Deepanshu/.insightface/models"
 INSWAPPER_PATH = os.path.join(MODELS_DIR, "inswapper_128.onnx")
+GFPGAN_PATH = os.path.join(MODELS_DIR, "GFPGANv1.4.onnx")
 
-# Find master Diya Rai reference face
+FFHQ_TEMPLATE_512 = np.array([
+    [192.98138, 239.94708],
+    [318.90277, 240.1936],
+    [256.63416, 314.01935],
+    [201.26117, 371.41043],
+    [313.08905, 371.15118]
+], dtype=np.float32)
+
+_gfpgan_session = None
+
+
+def get_gfpgan_session():
+    global _gfpgan_session
+    if _gfpgan_session is not None:
+        return _gfpgan_session
+    if not os.path.exists(GFPGAN_PATH):
+        logger.warning(f"GFPGAN model not found at {GFPGAN_PATH}")
+        return None
+    import onnxruntime as ort
+    providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+    try:
+        _gfpgan_session = ort.InferenceSession(GFPGAN_PATH, providers=providers)
+    except Exception:
+        _gfpgan_session = ort.InferenceSession(GFPGAN_PATH, providers=['CPUExecutionProvider'])
+    return _gfpgan_session
+
+
+def restore_face_gfpgan(img_bgr: np.ndarray, landmarks: np.ndarray) -> np.ndarray:
+    """Restores realistic high-definition skin, eyes, and sharpness using GFPGANv1.4."""
+    session = get_gfpgan_session()
+    if session is None:
+        return img_bgr
+    try:
+        affine_matrix, _ = cv2.estimateAffinePartial2D(landmarks, FFHQ_TEMPLATE_512)
+        if affine_matrix is None:
+            return img_bgr
+        warped = cv2.warpAffine(img_bgr, affine_matrix, (512, 512), borderMode=cv2.BORDER_REFLECT)
+        
+        # Normalize to [-1, 1], RGB
+        rgb = cv2.cvtColor(warped, cv2.COLOR_BGR2RGB).astype(np.float32) / 127.5 - 1.0
+        blob = np.transpose(rgb, (2, 0, 1))[np.newaxis, ...]
+        
+        out = session.run(None, {'input': blob})[0]
+        res = (out[0].transpose((1, 2, 0)) + 1.0) * 127.5
+        res = np.clip(res, 0, 255).astype(np.uint8)
+        restored_bgr = cv2.cvtColor(res, cv2.COLOR_RGB2BGR)
+        
+        # Invert affine and blend back
+        inv_affine = cv2.invertAffineTransform(affine_matrix)
+        h, w = img_bgr.shape[:2]
+        
+        # Natural face-shaped elliptical mask matching anatomical facial contour
+        mask = np.zeros((512, 512), dtype=np.float32)
+        cv2.ellipse(mask, (256, 275), (145, 185), 0, 0, 360, (1.0,), -1)
+        mask = cv2.GaussianBlur(mask, (71, 71), 25)
+        
+        warped_restored = cv2.warpAffine(restored_bgr, inv_affine, (w, h), flags=cv2.INTER_LANCZOS4)
+        warped_mask = cv2.warpAffine(mask, inv_affine, (w, h), flags=cv2.INTER_LANCZOS4)[:, :, np.newaxis]
+        
+        blended = warped_mask * warped_restored.astype(np.float32) + (1.0 - warped_mask) * img_bgr.astype(np.float32)
+        blended = np.clip(blended, 0, 255).astype(np.uint8)
+        
+        # Photorealistic unsharp masking (adds natural skin texture & edge crispness)
+        gaussian = cv2.GaussianBlur(blended, (0, 0), 1.5)
+        sharpened = cv2.addWeighted(blended, 1.35, gaussian, -0.35, 0)
+        return sharpened
+    except Exception as e:
+        logger.warning(f"GFPGAN enhancement fallback due to error: {e}")
+        return img_bgr
+
+
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MASTER_CANDIDATES = [
+    os.path.join(PROJECT_ROOT, "diya", "real.png"),          # BEST - slim sharp face, exact match
+    os.path.join(PROJECT_ROOT, "diya", "real_diya.png"),
     os.path.join(PROJECT_ROOT, "diya", "diya_reference.jpg"),
     os.path.join(PROJECT_ROOT, "diya", "best.png"),
-    os.path.join(PROJECT_ROOT, "diya", "real_diya.png"),
     os.path.join(PROJECT_ROOT, "diya", "2.jpeg"),
 ]
 
@@ -51,24 +123,37 @@ def get_face_engine():
     logger.info("Loading Inswapper 128 model...")
     _swapper = get_model(INSWAPPER_PATH, download=False, providers=providers)
 
-    # Locate master photo
-    master_path = None
-    for cand in MASTER_CANDIDATES:
-        if os.path.exists(cand):
-            master_path = cand
-            break
+    # Load all 3 primary ground-truth identity anchors
+    primary_anchors = [
+        os.path.join(PROJECT_ROOT, "diya", "real_diya.png"),
+        os.path.join(PROJECT_ROOT, "diya", "real.png"),
+        os.path.join(PROJECT_ROOT, "diya", "best_v2.jpg"),
+    ]
 
-    if not master_path:
-        raise FileNotFoundError("Master Diya Rai ground-truth photo not found in diya/ folder!")
+    embeddings = []
+    base_template = None
 
-    logger.info(f"Extracting Diya Rai master face identity from {master_path}...")
-    master_bgr = cv2.imread(master_path)
-    faces = _face_app.get(master_bgr)
-    if not faces:
-        raise ValueError(f"No face detected in master image {master_path}")
+    for anchor in primary_anchors:
+        if os.path.exists(anchor):
+            bgr = cv2.imread(anchor)
+            if bgr is not None:
+                faces = _face_app.get(bgr)
+                if faces:
+                    best = max(faces, key=lambda f: f.det_score)
+                    if base_template is None:
+                        base_template = best
+                    embeddings.append(best.normed_embedding)
+                    logger.info(f"Loaded identity anchor: {os.path.basename(anchor)} (conf={best.det_score:.3f})")
 
-    _master_face = max(faces, key=lambda f: f.det_score)
-    logger.info(f"✅ Diya Rai Master Identity Locked! Confidence: {_master_face.det_score:.4f}")
+    if not embeddings:
+        raise FileNotFoundError("No valid Diya Rai face detected in diya/ identity anchors!")
+
+    # Multi-layer weighted fusion of ground-truth identities
+    fused_emb = np.mean(embeddings, axis=0)
+    fused_emb = fused_emb / np.linalg.norm(fused_emb)
+    base_template.embedding = fused_emb
+    _master_face = base_template
+    logger.info(f"✅ Diya Rai Multi-Anchor Ground-Truth DNA Locked ({len(embeddings)} anchors fused)!")
 
     return _face_app, _swapper, _master_face
 
@@ -101,12 +186,15 @@ def swap_face_onto_reference(target_img_path: str, output_path: Optional[str] = 
 
         best_tgt = max(tgt_faces, key=lambda f: f.det_score)
         
-        # Apply face swap
+        # Apply face swap (128x128 canonical base)
         swapped_bgr = swapper.get(target_bgr, best_tgt, master_face, paste_back=True)
 
-        # Gentle skin tone & color harmonization
-        cv2.imwrite(output_path, swapped_bgr, [cv2.IMWRITE_JPEG_QUALITY, 96])
-        logger.info(f"✅ Successfully swapped Diya Rai's face onto reference: {output_path}")
+        # Ultra-HD GFPGANv1.4 Photorealistic Face Restoration & Sharpness
+        logger.info("Applying Ultra-HD GFPGANv1.4 face restoration & pore/eye sharpening...")
+        enhanced_bgr = restore_face_gfpgan(swapped_bgr, best_tgt.kps)
+
+        cv2.imwrite(output_path, enhanced_bgr, [cv2.IMWRITE_JPEG_QUALITY, 98])
+        logger.info(f"✅ Successfully swapped and restored Diya Rai's face onto reference: {output_path}")
         return True, output_path
 
     except Exception as e:
