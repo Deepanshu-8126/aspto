@@ -1,0 +1,17 @@
+{
+  "id": "ukboy7u787/diya-rai-lora-train",
+  "title": "Diya Rai LoRA Train",
+  "code_file": "kaggle_lora_train.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "ukboy7u787/diya-lora-dataset"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
